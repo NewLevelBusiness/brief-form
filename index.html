@@ -126,6 +126,9 @@
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 
   .step-eyebrow {
     font-family: 'Unbounded', sans-serif;
@@ -539,34 +542,38 @@
       <p class="step-subtitle">Базовая информация, чтобы мы понимали контекст и масштаб проекта.</p>
 
       <div class="field-group">
-        <label class="field-label">Название компании <span class="req">*</span></label>
+        <label class="field-label">Название компании</label>
         <input type="text" id="company_name" placeholder="ООО «Ромашка»">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Вид деятельности</label>
+        <input type="text" id="company_activity" placeholder="Розничная торговля, производство, логистика…">
       </div>
       <div class="field-group">
         <label class="field-label">Сайт компании</label>
         <input type="url" id="company_url" placeholder="https://example.com">
       </div>
       <div class="field-group">
-        <label class="field-label">Оборот компании</label>
+        <label class="field-label">Оборот компании (руб. в год)</label>
         <div class="card-grid two-col">
           <label class="choice-card">
-            <input type="radio" name="revenue" value="до 500 млн ₽">
-            <div class="choice-card-inner"><span class="choice-icon">🌱</span><div class="choice-text"><div class="choice-title">до 500 млн ₽</div><div class="choice-desc">Малый бизнес</div></div></div>
+            <input type="radio" name="revenue" value="до 1 млрд ₽">
+            <div class="choice-card-inner"><div class="choice-text"><div class="choice-title">до 1 млрд ₽</div></div></div>
             <div class="choice-check">✓</div>
           </label>
           <label class="choice-card">
-            <input type="radio" name="revenue" value="500 млн – 5 млрд ₽">
-            <div class="choice-card-inner"><span class="choice-icon">📈</span><div class="choice-text"><div class="choice-title">500 млн – 5 млрд ₽</div><div class="choice-desc">Средний бизнес</div></div></div>
+            <input type="radio" name="revenue" value="от 1 до 5 млрд ₽">
+            <div class="choice-card-inner"><div class="choice-text"><div class="choice-title">от 1 до 5 млрд ₽</div></div></div>
             <div class="choice-check">✓</div>
           </label>
           <label class="choice-card">
-            <input type="radio" name="revenue" value="5 – 50 млрд ₽">
-            <div class="choice-card-inner"><span class="choice-icon">🏢</span><div class="choice-text"><div class="choice-title">5 – 50 млрд ₽</div><div class="choice-desc">Крупный бизнес</div></div></div>
+            <input type="radio" name="revenue" value="от 5 до 50 млрд ₽">
+            <div class="choice-card-inner"><div class="choice-text"><div class="choice-title">от 5 до 50 млрд ₽</div></div></div>
             <div class="choice-check">✓</div>
           </label>
           <label class="choice-card">
             <input type="radio" name="revenue" value="более 50 млрд ₽">
-            <div class="choice-card-inner"><span class="choice-icon">🏦</span><div class="choice-text"><div class="choice-title">более 50 млрд ₽</div><div class="choice-desc">Enterprise</div></div></div>
+            <div class="choice-card-inner"><div class="choice-text"><div class="choice-title">более 50 млрд ₽</div></div></div>
             <div class="choice-check">✓</div>
           </label>
         </div>
@@ -596,88 +603,141 @@
           </label>
         </div>
       </div>
+
+      <div class="divider"></div>
+      <div class="subsection-title">Контактное лицо</div>
       <div class="field-group">
-        <label class="field-label">Контактное лицо и e-mail <span class="req">*</span></label>
-        <input type="text" id="contact_name" placeholder="Иван Иванов, ivan@company.ru" style="margin-bottom:0">
+        <label class="field-label">ФИО</label>
+        <input type="text" id="contact_name" placeholder="Иван Иванович Иванов">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Должность</label>
+        <input type="text" id="contact_position" placeholder="Директор по развитию">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Телефон</label>
+        <input type="text" id="contact_phone" placeholder="+7 (___) ___-__-__">
       </div>
     </div>
 
-    <!-- STEP 2: Цели проекта -->
+    <!-- STEP 2: Запрос + Продукты -->
     <div class="step" data-step="2">
-      <div class="step-eyebrow">Шаг 2 — Цели</div>
-      <h1 class="step-title">Зачем вам этот проект?</h1>
-      <p class="step-subtitle">Опишите боли и цели — это основа для точного предложения.</p>
+      <div class="step-eyebrow">Шаг 2 — Запрос</div>
+      <h1 class="step-title">В чём заключается запрос?</h1>
+      <p class="step-subtitle">Опишите ситуацию своими словами — это важнее любых шаблонов.</p>
 
       <div class="field-group">
-        <label class="field-label">Первичные цели проекта <span class="req">*</span></label>
-        <div class="tag-list" style="margin-bottom:16px">
-          <label class="tag-item"><input type="checkbox" name="goal" value="Единый источник правды по данным"><span class="tag-inner">Единый источник правды</span></label>
-          <label class="tag-item"><input type="checkbox" name="goal" value="Дашборды для руководства"><span class="tag-inner">Дашборды для руководства</span></label>
-          <label class="tag-item"><input type="checkbox" name="goal" value="Автоматизация отчётности"><span class="tag-inner">Автоматизация отчётности</span></label>
-          <label class="tag-item"><input type="checkbox" name="goal" value="Хранилище данных (DWH)"><span class="tag-inner">Хранилище данных (DWH)</span></label>
-          <label class="tag-item"><input type="checkbox" name="goal" value="Прогнозная аналитика"><span class="tag-inner">Прогнозная аналитика</span></label>
-          <label class="tag-item"><input type="checkbox" name="goal" value="Контроль KPI в реальном времени"><span class="tag-inner">Реальное время / KPI</span></label>
-          <label class="tag-item"><input type="checkbox" name="goal" value="Self-service BI для бизнеса"><span class="tag-inner">Self-service BI</span></label>
-        </div>
+        <label class="field-label">Описание задачи / В чём заключается запрос?</label>
+        <textarea id="problems" placeholder="Например: «Требуется консолидированная аналитика по группе компаний, объединить данные по продажам из трёх систем. Сейчас всё сводится вручную в Excel, уходит 3 дня, цифры расходятся…»" style="min-height:160px"></textarea>
       </div>
 
       <div class="field-group">
-        <label class="field-label">Опишите конкретные проблемы / задачи, которые нужно решить <span class="req">*</span></label>
-        <textarea id="problems" placeholder="Например: «Данные из 5 систем сводятся вручную в Excel раз в неделю, процесс занимает 3 дня, цифры расходятся. Нужен единый дашборд для коммерческого директора.»"></textarea>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Заказчик проекта (должность) <span class="req">*</span></label>
+        <label class="field-label">Инициатор / Заказчик проекта</label>
         <div class="card-grid">
+          <label class="choice-card">
+            <input type="radio" name="sponsor" value="Управляющий / Собственник">
+            <div class="choice-card-inner"><span class="choice-icon">👑</span><div class="choice-text"><div class="choice-title">Управляющий</div><div class="choice-desc">Собственник</div></div></div>
+            <div class="choice-check">✓</div>
+          </label>
           <label class="choice-card">
             <input type="radio" name="sponsor" value="CEO / Генеральный директор">
             <div class="choice-card-inner"><span class="choice-icon">👤</span><div class="choice-text"><div class="choice-title">CEO</div><div class="choice-desc">Ген. директор</div></div></div>
             <div class="choice-check">✓</div>
           </label>
           <label class="choice-card">
-            <input type="radio" name="sponsor" value="CDO / ИТ-директор">
-            <div class="choice-card-inner"><span class="choice-icon">💻</span><div class="choice-text"><div class="choice-title">CDO / CIO</div><div class="choice-desc">ИТ-директор</div></div></div>
+            <input type="radio" name="sponsor" value="Коммерческий директор">
+            <div class="choice-card-inner"><span class="choice-icon">📣</span><div class="choice-text"><div class="choice-title">Коммерческий</div><div class="choice-desc">директор</div></div></div>
             <div class="choice-check">✓</div>
           </label>
           <label class="choice-card">
-            <input type="radio" name="sponsor" value="CFO / Финансовый директор">
-            <div class="choice-card-inner"><span class="choice-icon">📊</span><div class="choice-text"><div class="choice-title">CFO</div><div class="choice-desc">Фин. директор</div></div></div>
+            <input type="radio" name="sponsor" value="Финансовый директор">
+            <div class="choice-card-inner"><span class="choice-icon">📊</span><div class="choice-text"><div class="choice-title">Финансовый</div><div class="choice-desc">директор</div></div></div>
             <div class="choice-check">✓</div>
           </label>
-          <label class="choice-card">
-            <input type="radio" name="sponsor" value="Другое">
+          <label class="choice-card" id="sponsor-other-card">
+            <input type="radio" name="sponsor" value="Другое" id="sponsor_other_radio">
             <div class="choice-card-inner"><span class="choice-icon">🔖</span><div class="choice-text"><div class="choice-title">Другое</div></div></div>
+            <div class="choice-check">✓</div>
+          </label>
+        </div>
+        <div id="sponsor_other_wrap" class="conditional" style="margin-top:12px">
+          <input type="text" id="sponsor_other_text" placeholder="Укажите должность…">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="subsection-title">Аналитические продукты</div>
+
+      <div class="field-group">
+        <label class="field-label">Основные группы показателей (KPI)</label>
+        <textarea id="kpi_groups" placeholder="Например: Продажи (выручка, маржа, конверсия), Логистика (NPS, сроки доставки), Финансы (P&amp;L, FCF)…"></textarea>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Нужна ли разработка методики расчёта показателей?</label>
+        <div class="card-grid two-col">
+          <label class="choice-card">
+            <input type="radio" name="methodology" value="Да, разработка с нуля" id="method_yes">
+            <div class="choice-card-inner"><span class="choice-icon">📐</span><div class="choice-text"><div class="choice-title">Да</div><div class="choice-desc">Разработка методики с нуля</div></div></div>
+            <div class="choice-check">✓</div>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="methodology" value="Нет, свои методики" id="method_no">
+            <div class="choice-card-inner"><span class="choice-icon">📋</span><div class="choice-text"><div class="choice-title">Нет</div><div class="choice-desc">Используем существующие методики</div></div></div>
             <div class="choice-check">✓</div>
           </label>
         </div>
       </div>
 
       <div class="field-group">
-        <label class="field-label">Кто будет пользоваться дашбордами? (можно несколько)</label>
+        <label class="field-label">Дополнительные требования к разработке (выберите всё применимое)</label>
         <div class="tag-list">
-          <label class="tag-item"><input type="checkbox" name="user_group" value="Топ-менеджмент"><span class="tag-inner">Топ-менеджмент</span></label>
-          <label class="tag-item"><input type="checkbox" name="user_group" value="Коммерческий блок"><span class="tag-inner">Коммерческий блок</span></label>
-          <label class="tag-item"><input type="checkbox" name="user_group" value="Финансы / Экономика"><span class="tag-inner">Финансы</span></label>
-          <label class="tag-item"><input type="checkbox" name="user_group" value="Операционный блок"><span class="tag-inner">Операционный блок</span></label>
-          <label class="tag-item"><input type="checkbox" name="user_group" value="ИТ"><span class="tag-inner">ИТ</span></label>
-          <label class="tag-item"><input type="checkbox" name="user_group" value="Аналитики данных"><span class="tag-inner">Аналитики данных</span></label>
+          <label class="tag-item"><input type="checkbox" name="dev_req" value="Дизайн по брендбуку компании"><span class="tag-inner">🎨 Дизайн по брендбуку</span></label>
+          <label class="tag-item"><input type="checkbox" name="dev_req" value="Описание стандартов и целевых значений KPI"><span class="tag-inner">📄 Описание стандартов KPI</span></label>
+          <label class="tag-item"><input type="checkbox" name="dev_req" value="Мобильная версия отчётов"><span class="tag-inner">📱 Мобильная версия</span></label>
+          <label class="tag-item"><input type="checkbox" name="dev_req" value="Разграничение прав доступа к дашбордам"><span class="tag-inner">🔐 Права доступа</span></label>
+          <label class="tag-item"><input type="checkbox" name="dev_req" value="Обучение пользователей"><span class="tag-inner">🎓 Обучение</span></label>
+          <label class="tag-item"><input type="checkbox" name="dev_req" value="Техническая документация"><span class="tag-inner">📚 Документация</span></label>
         </div>
       </div>
+
       <div class="field-group">
-        <label class="field-label">Примерное количество пользователей дашбордов</label>
-        <input type="number" id="user_count" placeholder="Например: 50">
+        <label class="field-label">Предпочитаемая BI-платформа (если есть)</label>
+        <div class="card-grid">
+          <label class="choice-card">
+            <input type="radio" name="bi_platform" value="Power BI">
+            <div class="choice-card-inner"><span class="choice-icon">🟡</span><div class="choice-text"><div class="choice-title">Power BI</div></div></div>
+            <div class="choice-check">✓</div>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="bi_platform" value="Yandex DataLens">
+            <div class="choice-card-inner"><span class="choice-icon">🟠</span><div class="choice-text"><div class="choice-title">DataLens</div></div></div>
+            <div class="choice-check">✓</div>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="bi_platform" value="Metabase">
+            <div class="choice-card-inner"><span class="choice-icon">🟢</span><div class="choice-text"><div class="choice-title">Metabase</div></div></div>
+            <div class="choice-check">✓</div>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="bi_platform" value="Visiology">
+            <div class="choice-card-inner"><span class="choice-icon">🔷</span><div class="choice-text"><div class="choice-title">Visiology</div></div></div>
+            <div class="choice-check">✓</div>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="bi_platform" value="На усмотрение команды">
+            <div class="choice-card-inner"><span class="choice-icon">🤝</span><div class="choice-text"><div class="choice-title">Без предпочтений</div></div></div>
+            <div class="choice-check">✓</div>
+          </label>
+        </div>
       </div>
     </div>
 
     <!-- STEP 3: Источники данных -->
     <div class="step" data-step="3">
-      <div class="step-eyebrow">Шаг 3 — Данные</div>
+      <div class="step-eyebrow">Шаг 3 — IT-ландшафт</div>
       <h1 class="step-title">Откуда берём данные?</h1>
-      <p class="step-subtitle">Перечислите системы-источники. Добавьте столько, сколько нужно.</p>
-
-      <div class="notice">
-        <strong>Почему это важно.</strong> Интеграция с каждой системой — это отдельная работа. Чем точнее вы укажете состав ИС, тем точнее будет оценка проекта.
-      </div>
+      <p class="step-subtitle">Общий обзор систем — детальный технический опрос проведём на следующем этапе.</p>
 
       <div class="field-group">
         <label class="field-label">Уже есть хранилище данных (DWH)?</label>
@@ -703,50 +763,14 @@
       </div>
 
       <div class="divider"></div>
-      <div class="subsection-title">Системы-источники для интеграции</div>
 
-      <div class="system-list" id="system-list">
-        <div class="system-item">
-          <div class="system-item-header">
-            <div class="system-num">Система 1</div>
-          </div>
-          <div class="system-fields">
-            <div>
-              <label class="field-label">Название и версия</label>
-              <input type="text" class="sys-name" placeholder="1С:ERP 8.3 / SAP / Bitrix24">
-            </div>
-            <div>
-              <label class="field-label">Тип развёртывания</label>
-              <select class="sys-type">
-                <option value="">— Выберите —</option>
-                <option>Облачная (SaaS)</option>
-                <option>Коробочная (on-premise)</option>
-                <option>Гибрид</option>
-              </select>
-            </div>
-            <div>
-              <label class="field-label">Предметная область (что забираем)</label>
-              <input type="text" class="sys-domain" placeholder="Продажи, склад, финансы…">
-            </div>
-            <div>
-              <label class="field-label">Способ интеграции</label>
-              <select class="sys-integration">
-                <option value="">— Выберите —</option>
-                <option>API (REST/SOAP)</option>
-                <option>ODBC/JDBC</option>
-                <option>Файловый обмен (CSV/Excel)</option>
-                <option>Прямой доступ к БД</option>
-                <option>Не знаю — нужна оценка</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-      <button class="add-btn" id="add-system">+ Добавить систему</button>
-
-      <div class="divider"></div>
       <div class="field-group">
-        <label class="field-label">Объём данных и режим обновления</label>
+        <label class="field-label">Опишите текущий IT-ландшафт компании</label>
+        <textarea id="it_landscape" placeholder="Перечислите ваши информационные системы (ERP, CRM, WMS, МЭД и т.д.). Например: 1С:ERP, Bitrix24, SAP WM, собственная система учёта заказов…" style="min-height:140px"></textarea>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Предполагаемый режим обновления данных</label>
         <div class="card-grid">
           <label class="choice-card">
             <input type="radio" name="data_volume" value="Ежедневно, небольшой объём (<1 ГБ)">
@@ -820,93 +844,12 @@
         </div>
       </div>
 
-      <div class="field-group">
-        <label class="field-label">Регламентные требования к данным (можно несколько)</label>
-        <div class="tag-list">
-          <label class="tag-item"><input type="checkbox" name="compliance" value="152-ФЗ (персональные данные)"><span class="tag-inner">152-ФЗ</span></label>
-          <label class="tag-item"><input type="checkbox" name="compliance" value="GDPR"><span class="tag-inner">GDPR</span></label>
-          <label class="tag-item"><input type="checkbox" name="compliance" value="ISO 27001"><span class="tag-inner">ISO 27001</span></label>
-          <label class="tag-item"><input type="checkbox" name="compliance" value="Внутренние регламенты ИБ"><span class="tag-inner">Внутренние регламенты</span></label>
-          <label class="tag-item"><input type="checkbox" name="compliance" value="ЦБ РФ / ФСТЭК"><span class="tag-inner">ЦБ РФ / ФСТЭК</span></label>
-          <label class="tag-item"><input type="checkbox" name="compliance" value="Нет особых требований"><span class="tag-inner">Нет особых требований</span></label>
-        </div>
-      </div>
+
     </div>
 
-    <!-- STEP 5: Аналитические продукты -->
+    <!-- STEP 5: Сроки и ожидания -->
     <div class="step" data-step="5">
-      <div class="step-eyebrow">Шаг 5 — Продукты</div>
-      <h1 class="step-title">Требования к дашбордам</h1>
-      <p class="step-subtitle">Помогите нам понять, что именно нужно создать и как это должно выглядеть.</p>
-
-      <div class="field-group">
-        <label class="field-label">Основные группы показателей (KPI) <span class="req">*</span></label>
-        <textarea id="kpi_groups" placeholder="Например: Продажи (выручка, маржа, конверсия), Логистика (NPS, сроки доставки), Финансы (P&amp;L, FCF)…"></textarea>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Нужна ли разработка методики расчёта показателей?</label>
-        <div class="card-grid two-col">
-          <label class="choice-card">
-            <input type="radio" name="methodology" value="Да, разработка с нуля" id="method_yes">
-            <div class="choice-card-inner"><span class="choice-icon">📐</span><div class="choice-text"><div class="choice-title">Да</div><div class="choice-desc">Разработка методики с нуля</div></div></div>
-            <div class="choice-check">✓</div>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="methodology" value="Нет, свои методики" id="method_no">
-            <div class="choice-card-inner"><span class="choice-icon">📋</span><div class="choice-text"><div class="choice-title">Нет</div><div class="choice-desc">Используем существующие методики</div></div></div>
-            <div class="choice-check">✓</div>
-          </label>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Дополнительные требования к разработке (выберите всё применимое)</label>
-        <div class="tag-list">
-          <label class="tag-item"><input type="checkbox" name="dev_req" value="Дизайн по брендбуку компании"><span class="tag-inner">🎨 Дизайн по брендбуку</span></label>
-          <label class="tag-item"><input type="checkbox" name="dev_req" value="Описание стандартов и целевых значений KPI"><span class="tag-inner">📄 Описание стандартов KPI</span></label>
-          <label class="tag-item"><input type="checkbox" name="dev_req" value="Мобильная версия отчётов"><span class="tag-inner">📱 Мобильная версия</span></label>
-          <label class="tag-item"><input type="checkbox" name="dev_req" value="Разграничение прав доступа к дашбордам"><span class="tag-inner">🔐 Права доступа</span></label>
-          <label class="tag-item"><input type="checkbox" name="dev_req" value="Обучение пользователей"><span class="tag-inner">🎓 Обучение</span></label>
-          <label class="tag-item"><input type="checkbox" name="dev_req" value="Техническая документация"><span class="tag-inner">📚 Документация</span></label>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Предпочитаемая BI-платформа (если есть)</label>
-        <div class="card-grid">
-          <label class="choice-card">
-            <input type="radio" name="bi_platform" value="Power BI">
-            <div class="choice-card-inner"><span class="choice-icon">🟡</span><div class="choice-text"><div class="choice-title">Power BI</div></div></div>
-            <div class="choice-check">✓</div>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="bi_platform" value="Tableau">
-            <div class="choice-card-inner"><span class="choice-icon">🔵</span><div class="choice-text"><div class="choice-title">Tableau</div></div></div>
-            <div class="choice-check">✓</div>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="bi_platform" value="Yandex DataLens">
-            <div class="choice-card-inner"><span class="choice-icon">🟠</span><div class="choice-text"><div class="choice-title">DataLens</div></div></div>
-            <div class="choice-check">✓</div>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="bi_platform" value="Metabase">
-            <div class="choice-card-inner"><span class="choice-icon">🟢</span><div class="choice-text"><div class="choice-title">Metabase</div></div></div>
-            <div class="choice-check">✓</div>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="bi_platform" value="На усмотрение команды">
-            <div class="choice-card-inner"><span class="choice-icon">🤝</span><div class="choice-text"><div class="choice-title">Без предпочтений</div></div></div>
-            <div class="choice-check">✓</div>
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 6: Сроки и ожидания -->
-    <div class="step" data-step="6">
-      <div class="step-eyebrow">Шаг 6 — Сроки</div>
+      <div class="step-eyebrow">Шаг 5 — Сроки</div>
       <h1 class="step-title">Сроки и ожидания</h1>
       <p class="step-subtitle">Последний шаг! Расскажите об ограничениях по времени и ваших ожиданиях от сотрудничества.</p>
 
@@ -959,13 +902,31 @@
 
   <!-- Success screen -->
   <div id="success-screen">
-    <div class="success-icon">✓</div>
-    <h2 class="success-title">Бриф получен!</h2>
-    <p class="success-sub">Спасибо! Мы изучим ваш запрос и свяжемся в течение одного рабочего дня с предварительной оценкой проекта.</p>
-    <div class="success-actions">
-      <button class="btn-green" id="btn-download">⬇ Скачать JSON</button>
-      <button class="btn-ghost" id="btn-copy">⧉ Скопировать данные</button>
-      <button class="btn-ghost" id="btn-restart">↩ Заполнить снова</button>
+    <!-- Sending state -->
+    <div id="sending-state" style="text-align:center;padding:60px 0">
+      <div style="width:60px;height:60px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 24px"></div>
+      <p style="color:var(--muted);font-size:15px">Отправляем бриф в Google Sheets…</p>
+    </div>
+    <!-- Success state -->
+    <div id="sent-state" style="display:none;text-align:center;padding:60px 0;animation:fadeSlide 0.5s ease">
+      <div class="success-icon">✓</div>
+      <h2 class="success-title">Бриф сохранён!</h2>
+      <p class="success-sub">Данные записаны в Google Таблицу. Мы свяжемся с вами в течение одного рабочего дня.</p>
+      <div class="success-actions">
+        <button class="btn-green" id="btn-download">⬇ Скачать JSON</button>
+        <button class="btn-ghost" id="btn-copy">⧉ Скопировать данные</button>
+        <button class="btn-ghost" id="btn-restart">↩ Заполнить снова</button>
+      </div>
+    </div>
+    <!-- Error state -->
+    <div id="error-state" style="display:none;text-align:center;padding:60px 0;animation:fadeSlide 0.5s ease">
+      <div class="success-icon" style="border-color:var(--error);background:rgba(255,92,138,0.1);color:var(--error)">✕</div>
+      <h2 class="success-title" style="color:var(--error)">Ошибка отправки</h2>
+      <p class="success-sub" id="error-msg">Не удалось сохранить бриф. Данные доступны для скачивания.</p>
+      <div class="success-actions">
+        <button class="btn-green" id="btn-download-err">⬇ Скачать JSON</button>
+        <button class="btn-ghost" id="btn-retry">↺ Попробовать снова</button>
+      </div>
     </div>
   </div>
 
@@ -980,11 +941,11 @@
 <div class="toast" id="toast">✓ Скопировано в буфер обмена</div>
 
 <script>
-const STEPS = 6;
+const STEPS = 5;
 let currentStep = 1;
 let collectedData = {};
 
-const stepLabels = ['Профиль','Цели','Данные','ИБ','Продукты','Сроки'];
+const stepLabels = ['Профиль','Запрос','IT-ландшафт','ИБ','Сроки'];
 
 // Init progress labels
 (function initProgress(){
@@ -1016,7 +977,7 @@ function showStep(n) {
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-// Conditional logic
+// Conditional logic — DWH
 document.querySelectorAll('[name="has_dwh"]').forEach(r => {
   r.addEventListener('change', ()=>{
     document.getElementById('dwh_exists_info').classList.toggle('shown',
@@ -1024,6 +985,7 @@ document.querySelectorAll('[name="has_dwh"]').forEach(r => {
   });
 });
 
+// Conditional logic — deadline
 document.querySelectorAll('[name="deadline_type"]').forEach(r => {
   r.addEventListener('change', ()=>{
     const show = document.getElementById('dl_fixed').checked || document.getElementById('dl_soft').checked;
@@ -1031,98 +993,16 @@ document.querySelectorAll('[name="deadline_type"]').forEach(r => {
   });
 });
 
-// System repeater
-let systemCount = 1;
-document.getElementById('add-system').addEventListener('click', ()=>{
-  systemCount++;
-  const item = document.createElement('div');
-  item.className = 'system-item';
-  item.innerHTML = `
-    <div class="system-item-header">
-      <div class="system-num">Система ${systemCount}</div>
-      <button class="system-remove" title="Удалить">✕</button>
-    </div>
-    <div class="system-fields">
-      <div><label class="field-label">Название и версия</label>
-        <input type="text" class="sys-name" placeholder="Название / версия"></div>
-      <div><label class="field-label">Тип развёртывания</label>
-        <select class="sys-type">
-          <option value="">— Выберите —</option>
-          <option>Облачная (SaaS)</option><option>Коробочная (on-premise)</option><option>Гибрид</option>
-        </select></div>
-      <div><label class="field-label">Предметная область</label>
-        <input type="text" class="sys-domain" placeholder="Продажи, финансы…"></div>
-      <div><label class="field-label">Способ интеграции</label>
-        <select class="sys-integration">
-          <option value="">— Выберите —</option>
-          <option>API (REST/SOAP)</option><option>ODBC/JDBC</option>
-          <option>Файловый обмен (CSV/Excel)</option><option>Прямой доступ к БД</option>
-          <option>Не знаю — нужна оценка</option>
-        </select></div>
-    </div>`;
-  item.querySelector('.system-remove').addEventListener('click', ()=>{
-    item.remove();
-    renumberSystems();
+// Conditional logic — sponsor "Другое"
+document.querySelectorAll('[name="sponsor"]').forEach(r => {
+  r.addEventListener('change', ()=>{
+    document.getElementById('sponsor_other_wrap').classList.toggle('shown',
+      document.getElementById('sponsor_other_radio').checked);
   });
-  document.getElementById('system-list').appendChild(item);
 });
 
-function renumberSystems(){
-  document.querySelectorAll('.system-item .system-num').forEach((el,i)=>{
-    el.textContent = `Система ${i+1}`;
-  });
-  systemCount = document.querySelectorAll('.system-item').length;
-}
-
-// Validation
-function validate(step){
-  let ok = true;
-  if(step === 1){
-    ok = requireField('company_name') && ok;
-    ok = requireField('contact_name') && ok;
-  }
-  if(step === 2){
-    ok = requireField('problems') && ok;
-    const goals = document.querySelectorAll('[name="goal"]:checked');
-    if(!goals.length){ showInlineError('step2-goals','Выберите хотя бы одну цель'); ok=false; }
-    else hideInlineError('step2-goals');
-  }
-  if(step === 5){
-    ok = requireField('kpi_groups') && ok;
-  }
-  return ok;
-}
-
-function requireField(id){
-  const el = document.getElementById(id);
-  if(!el) return true;
-  if(!el.value.trim()){
-    el.classList.add('error');
-    let err = el.nextElementSibling;
-    if(!err || !err.classList.contains('field-error')){
-      err = document.createElement('div');
-      err.className = 'field-error';
-      err.textContent = 'Обязательное поле';
-      el.parentNode.insertBefore(err, el.nextSibling);
-    }
-    err.classList.add('visible');
-    el.addEventListener('input', ()=>{ el.classList.remove('error'); err.classList.remove('visible'); }, {once:true});
-    return false;
-  }
-  return true;
-}
-function showInlineError(id, msg){
-  let el = document.getElementById(id+'-err');
-  if(!el){ el=document.createElement('div'); el.className='field-error'; el.id=id+'-err';
-    const ref = document.querySelector('[name="goal"]')?.closest('.tag-list');
-    if(ref) ref.insertAdjacentElement('afterend', el);
-  }
-  el.textContent = msg; el.classList.add('visible');
-}
-function hideInlineError(id){
-  const el = document.getElementById(id+'-err');
-  if(el) el.classList.remove('visible');
-}
+// Validation — always passes (no required fields)
+function validate(){ return true; }
 
 // Collect data
 function collect(){
@@ -1130,33 +1010,31 @@ function collect(){
   const radio = name => { const el=document.querySelector(`[name="${name}"]:checked`); return el?el.value:''; };
   const checks = name => [...document.querySelectorAll(`[name="${name}"]:checked`)].map(e=>e.value);
 
-  const systems = [...document.querySelectorAll('.system-item')].map(item=>({
-    name: item.querySelector('.sys-name').value,
-    deployment: item.querySelector('.sys-type').value,
-    domain: item.querySelector('.sys-domain').value,
-    integration: item.querySelector('.sys-integration').value,
-  })).filter(s=>s.name);
+  const sponsorVal = radio('sponsor');
+  const sponsor = sponsorVal === 'Другое' ? (get('sponsor_other_text') || 'Другое') : sponsorVal;
 
   return {
-    _meta: { form: 'Data-Driven Project Brief v1.0', submitted: new Date().toISOString() },
+    _meta: { form: 'Data-Driven Project Brief v1.1', submitted: new Date().toISOString() },
     company: {
       name: get('company_name'),
+      activity: get('company_activity'),
       url: get('company_url'),
       revenue: radio('revenue'),
       headcount: radio('headcount'),
-      contact: get('contact_name'),
+    },
+    contact: {
+      name: get('contact_name'),
+      position: get('contact_position'),
+      phone: get('contact_phone'),
     },
     project: {
-      goals: checks('goal'),
-      problems: get('problems'),
-      sponsor: radio('sponsor'),
-      dashboard_users: checks('user_group'),
-      user_count: get('user_count'),
+      description: get('problems'),
+      sponsor: sponsor,
     },
     data: {
       has_dwh: radio('has_dwh'),
       dwh_sources: get('dwh_sources'),
-      source_systems: systems,
+      it_landscape: get('it_landscape'),
       data_volume: radio('data_volume'),
     },
     security: {
@@ -1179,19 +1057,57 @@ function collect(){
   };
 }
 
-// Submit
-function submit(){
+// ⬇ ВСТАВЬТЕ СЮДА ВАШ URL после публикации Apps Script
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/ВСТАВЬТЕ_ВАШ_URL/exec';
+
+// Submit — отправка в Google Sheets
+async function submit() {
   collectedData = collect();
   console.log('📋 Brief JSON:', JSON.stringify(collectedData, null, 2));
+
+  // Показываем экран с индикатором загрузки
   document.getElementById('progress-wrap').style.display = 'none';
   document.getElementById('form-body').style.display = 'none';
   document.getElementById('nav-row').style.display = 'none';
   document.getElementById('success-screen').style.display = 'block';
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(collectedData),
+    });
+    const json = await res.json();
+    if (json.status === 'ok') {
+      showSent();
+    } else {
+      showError('Сервер вернул ошибку: ' + (json.message || 'неизвестно'));
+    }
+  } catch (err) {
+    showError('Нет связи с сервером. Скачайте JSON и передайте менеджеру вручную.');
+  }
+}
+
+function showSent() {
+  document.getElementById('sending-state').style.display = 'none';
+  document.getElementById('sent-state').style.display = 'block';
+}
+
+function showError(msg) {
+  document.getElementById('sending-state').style.display = 'none';
+  document.getElementById('error-msg').textContent = msg;
+  document.getElementById('error-state').style.display = 'block';
+}
+
+function downloadJSON() {
+  const blob = new Blob([JSON.stringify(collectedData, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'brief-data-driven.json';
+  a.click();
 }
 
 // Nav buttons
 document.getElementById('btn-next').addEventListener('click', ()=>{
-  if(!validate(currentStep)) return;
   if(currentStep < STEPS){ currentStep++; showStep(currentStep); }
   else submit();
 });
@@ -1200,13 +1116,8 @@ document.getElementById('btn-back').addEventListener('click', ()=>{
 });
 
 // Success actions
-document.getElementById('btn-download').addEventListener('click', ()=>{
-  const blob = new Blob([JSON.stringify(collectedData, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'brief-data-driven.json';
-  a.click();
-});
+document.getElementById('btn-download').addEventListener('click', downloadJSON);
+document.getElementById('btn-download-err').addEventListener('click', downloadJSON);
 document.getElementById('btn-copy').addEventListener('click', ()=>{
   navigator.clipboard.writeText(JSON.stringify(collectedData, null, 2)).then(()=>{
     const t = document.getElementById('toast');
@@ -1215,6 +1126,11 @@ document.getElementById('btn-copy').addEventListener('click', ()=>{
   });
 });
 document.getElementById('btn-restart').addEventListener('click', ()=>location.reload());
+document.getElementById('btn-retry').addEventListener('click', ()=>{
+  document.getElementById('error-state').style.display = 'none';
+  document.getElementById('sending-state').style.display = 'block';
+  submit();
+});
 
 // Init
 showStep(1);
