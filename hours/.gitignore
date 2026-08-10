@@ -8,3 +8,4 @@ dashboard.html
 facts.csv
 *.csv
 extra/
+__pycache__/
