@@ -1,0 +1,736 @@
+<title>Загрузка команды по проектам</title>
+<style>
+:root {
+  color-scheme: light;
+  --page:           #f9f9f7;
+  --surface:        #fcfcfb;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --grid:           #e1e0d9;
+  --axis:           #c3c2b7;
+  --border:         rgba(11,11,11,0.10);
+  --wash:           rgba(11,11,11,0.035);
+  --s1: #2a78d6;  /* Коммерческие */
+  --s2: #eb6834;  /* Внутренние (NLB) */
+  --s3: #1baf7a;  /* Пресейл */
+  --s4: #eda100;  /* Отпуск */
+  --seq-0: #f0efec; --seq-1: #cde2fb; --seq-2: #9ec5f4; --seq-3: #6da7ec;
+  --seq-4: #3987e5; --seq-5: #256abf; --seq-6: #184f95; --seq-7: #0d366b;
+  --good: #0ca30c; --critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page:           #0d0d0d;
+    --surface:        #1a1a19;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --wash:           rgba(255,255,255,0.05);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --seq-0: #383835; --seq-1: #184f95; --seq-2: #256abf; --seq-3: #2a78d6;
+    --seq-4: #3987e5; --seq-5: #5598e7; --seq-6: #86b6ef; --seq-7: #cde2fb;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page:           #0d0d0d;
+  --surface:        #1a1a19;
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #898781;
+  --grid:           #2c2c2a;
+  --axis:           #383835;
+  --border:         rgba(255,255,255,0.10);
+  --wash:           rgba(255,255,255,0.05);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --seq-0: #383835; --seq-1: #184f95; --seq-2: #256abf; --seq-3: #2a78d6;
+  --seq-4: #3987e5; --seq-5: #5598e7; --seq-6: #86b6ef; --seq-7: #cde2fb;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px; }
+
+h1 { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 6px; }
+h2 { font-size: 16px; font-weight: 600; margin: 0; }
+.sub { color: var(--text-secondary); margin: 0; }
+.muted { color: var(--text-muted); }
+header .sub { font-size: 13px; }
+
+/* ── Фильтры: одна строка над всем, что они скоупят ───────────── */
+.filters {
+  display: flex; flex-wrap: wrap; gap: 20px 28px; align-items: flex-end;
+  margin: 28px 0 24px; padding: 16px 18px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+}
+.fgroup { display: flex; flex-direction: column; gap: 7px; }
+.flabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font: inherit; font-size: 13px; padding: 5px 12px; min-height: 30px;
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: 999px; cursor: pointer;
+}
+.chip:hover { background: var(--wash); }
+.chip[aria-pressed="true"] { background: var(--s1); border-color: var(--s1); color: #fff; font-weight: 600; }
+
+/* ── Карточки ─────────────────────────────────────────────────── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px 22px 22px; margin-bottom: 20px;
+}
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
+.card-note { font-size: 12.5px; color: var(--text-muted); margin: 2px 0 18px; max-width: 72ch; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+.kpi { background: var(--surface); padding: 18px 20px; }
+.kpi .label { font-size: 12px; color: var(--text-muted); }
+.kpi .value { font-size: 30px; font-weight: 650; letter-spacing: -0.02em; margin-top: 4px; }
+.kpi.hero .value { font-size: 52px; line-height: 1.05; }
+.kpi .foot { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* ── Легенда ──────────────────────────────────────────────────── */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 14px; }
+.lg { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-secondary); }
+.sw { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+
+.scroll { overflow-x: auto; }
+svg { display: block; }
+svg text { fill: var(--text-secondary); font-size: 11px; }
+svg text.tick { fill: var(--text-muted); font-variant-numeric: tabular-nums; }
+svg text.val { fill: var(--text-primary); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+svg text.name { fill: var(--text-primary); font-size: 12px; }
+.hit { fill: transparent; cursor: pointer; }
+.hit:focus-visible { fill: var(--wash); outline: none; }
+
+/* ── Тултип ───────────────────────────────────────────────────── */
+#tip {
+  position: fixed; pointer-events: none; z-index: 50; opacity: 0;
+  transition: opacity .1s; max-width: 300px;
+  background: var(--surface); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18); padding: 10px 12px; font-size: 12.5px;
+}
+#tip .t { font-weight: 650; margin-bottom: 6px; }
+#tip .r { display: flex; justify-content: space-between; gap: 18px; }
+#tip .r b { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* ── Таблицы ──────────────────────────────────────────────────── */
+.tbtn {
+  font: inherit; font-size: 12px; padding: 4px 11px; cursor: pointer;
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: 999px;
+}
+.tbtn:hover { background: var(--wash); }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 16px; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+td { font-variant-numeric: tabular-nums; }
+td.name { font-variant-numeric: normal; }
+tr.total td { font-weight: 650; border-top: 1px solid var(--axis); border-bottom: none; }
+[hidden] { display: none !important; }
+
+footer { margin-top: 36px; font-size: 12.5px; color: var(--text-secondary); }
+footer h2 { margin-bottom: 10px; }
+footer ul { padding-left: 18px; margin: 0 0 14px; }
+footer li { margin-bottom: 5px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Загрузка команды по проектам</h1>
+    <p class="sub" id="hdr"></p>
+  </header>
+
+  <div class="filters">
+    <div class="fgroup">
+      <span class="flabel" id="lb-per">Период</span>
+      <div class="chips" id="f-period" role="group" aria-labelledby="lb-per"></div>
+    </div>
+    <div class="fgroup">
+      <span class="flabel" id="lb-team">Кого показываем</span>
+      <div class="chips" id="f-team" role="group" aria-labelledby="lb-team"></div>
+    </div>
+    <div class="fgroup">
+      <span class="flabel" id="lb-per2">Сотрудник</span>
+      <div class="chips" id="f-person" role="group" aria-labelledby="lb-per2"></div>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Структура времени по месяцам</h2>
+      <button class="tbtn" data-table="t-months" aria-expanded="false">Таблица</button>
+    </div>
+    <p class="card-note">Все залогированные часы, разложенные по типу занятости. Подпись над колонкой — доля коммерческих часов в месяце.</p>
+    <div class="legend" id="lg-cat"></div>
+    <div class="scroll"><svg id="c-months" role="img" aria-label="Часы по месяцам в разрезе типа занятости"></svg></div>
+    <div id="t-months" hidden></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Профиль занятости сотрудников</h2>
+      <button class="tbtn" data-table="t-people" aria-expanded="false">Таблица</button>
+    </div>
+    <p class="card-note">Доли внутри полного залогированного времени каждого человека за выбранный период. Подпись справа — коммерческая загрузка: коммерческие часы к рабочему времени без отпуска.</p>
+    <div class="legend" id="lg-cat2"></div>
+    <div class="scroll"><svg id="c-people" role="img" aria-label="Структура времени по сотрудникам"></svg></div>
+    <div id="t-people" hidden></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Матрица «сотрудник × проект»</h2>
+      <button class="tbtn" data-table="t-matrix" aria-expanded="false">Таблица</button>
+    </div>
+    <p class="card-note">Насыщенность ячейки — доля проекта во времени человека, число в ячейке — часы. Показаны проекты из топа по часам за период.</p>
+    <div class="legend" id="lg-seq"></div>
+    <div class="scroll"><svg id="c-matrix" role="img" aria-label="Матрица распределения часов по сотрудникам и проектам"></svg></div>
+    <div id="t-matrix" hidden></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Проекты по объёму часов</h2>
+      <button class="tbtn" data-table="t-proj" aria-expanded="false">Таблица</button>
+    </div>
+    <p class="card-note">Топ проектов за период. Внутренние и пресейл-проекты участвуют наравне с коммерческими — они тоже съедают время.</p>
+    <div class="scroll"><svg id="c-proj" role="img" aria-label="Проекты по объёму часов"></svg></div>
+    <div id="t-proj" hidden></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>На что уходит время</h2>
+      <button class="tbtn" data-table="t-macro" aria-expanded="false">Таблица</button>
+    </div>
+    <p class="card-note">55 значений свободного списка «тип работ» сведены в макрогруппы правилами из <code>build.py</code>.</p>
+    <div class="scroll"><svg id="c-macro" role="img" aria-label="Часы по макрогруппам работ"></svg></div>
+    <div id="t-macro" hidden></div>
+  </section>
+
+  <footer>
+    <h2>Как это считается</h2>
+    <ul>
+      <li><b>Источник</b> — вкладки сотрудников таблицы «Учет времени по проектам»; тип занятости определяется статусом проекта в листе «справочники» (<i>подтвержденные</i> → коммерческий, остальное → внутреннее или пресейл).</li>
+      <li><b>Коммерческая загрузка</b> = коммерческие часы ÷ (все часы − отпуск). Знаменателем взят факт, а не производственный календарь: сотрудники заполняют табель ровно под норму месяца, поэтому «часы» и «норма» — это одно и то же число.</li>
+      <li><b>Отпуск</b> вынесен в отдельную категорию и исключён из знаменателя загрузки, но виден в структуре времени.</li>
+      <li id="ft-issues"></li>
+    </ul>
+  </footer>
+</div>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const CAT_VARS = ['--s1','--s2','--s3','--s4'];
+const SEQ = ['--seq-1','--seq-2','--seq-3','--seq-4','--seq-5','--seq-6','--seq-7'];
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+// Подпись внутри залитой ячейки — единственный случай, когда текст красится по заливке.
+// Считаем яркость, а не угадываем: ступени ramp'а меняют порядок между темами.
+function inkOn(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return '#fff';
+  const v = parseInt(m[1], 16);
+  const ch = [(v >> 16) & 255, (v >> 8) & 255, v & 255]
+    .map(c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+  const lum = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+  return lum > 0.42 ? '#0b0b0b' : '#ffffff';
+}
+
+const fmt = n => Math.round(n).toLocaleString('ru-RU');
+const fmt1 = n => (Math.round(n * 10) / 10).toLocaleString('ru-RU');
+const pct = n => (Math.round(n * 10) / 10).toLocaleString('ru-RU') + '%';
+const MONTH_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const monthLabel = m => MONTH_RU[+m.slice(5, 7) - 1] + ' ' + m.slice(2, 4);
+
+// Постоянный состав — сплошной учёт (12+ месяцев) и объём, на котором доли что-то значат.
+// Без порога по часам сюда попадают те, кто отметился парой часов в год.
+const monthsByPerson = DATA.people.map(() => new Set());
+const hoursByPerson = DATA.people.map(() => 0);
+DATA.cube.forEach(([p, , m, , , h]) => { monthsByPerson[p].add(m); hoursByPerson[p] += h; });
+const CORE = DATA.people.filter((_, i) => monthsByPerson[i].size >= 12 && hoursByPerson[i] >= 1000);
+
+const state = { period: 'all', team: 'core', person: 'all' };
+
+/* ── Фильтры ───────────────────────────────────────────────────── */
+const years = [...new Set(DATA.months.map(m => m.slice(0, 4)))].sort();
+const periods = [{ id: 'all', label: 'Весь период' }, { id: 'l12', label: 'Последние 12 мес' }]
+  .concat(years.slice().reverse().map(y => ({ id: y, label: y })));
+
+function monthsInScope() {
+  if (state.period === 'all') return DATA.months.slice();
+  if (state.period === 'l12') return DATA.months.slice(-12);
+  return DATA.months.filter(m => m.startsWith(state.period));
+}
+function peopleInScope() {
+  if (state.person !== 'all') return [state.person];
+  return state.team === 'core' ? CORE : DATA.people.slice();
+}
+
+function chips(host, items, key, onName) {
+  host.innerHTML = '';
+  items.forEach(it => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.type = 'button';
+    b.textContent = it.label;
+    b.setAttribute('aria-pressed', String(state[key] === it.id));
+    b.onclick = () => { state[key] = it.id; if (onName) onName(); render(); };
+    host.appendChild(b);
+  });
+}
+function buildFilters() {
+  chips(document.getElementById('f-period'), periods, 'period');
+  chips(document.getElementById('f-team'), [
+    { id: 'core', label: 'Постоянный состав' }, { id: 'all', label: 'Все, кто есть в файле' }
+  ], 'team', () => { state.person = 'all'; });
+  const pool = state.team === 'core' ? CORE : DATA.people;
+  chips(document.getElementById('f-person'),
+    [{ id: 'all', label: 'Все' }].concat(pool.map(p => ({ id: p, label: p }))), 'person');
+}
+
+/* ── Срез данных ───────────────────────────────────────────────── */
+function slice() {
+  const mset = new Set(monthsInScope().map(m => DATA.months.indexOf(m)));
+  const pset = new Set(peopleInScope().map(p => DATA.people.indexOf(p)));
+  return DATA.cube.filter(r => mset.has(r[2]) && pset.has(r[0]));
+}
+// Месяцы, в которых у выбранных людей есть часы. Иначе график открывается пустотой
+// за те месяцы, когда постоянный состав ещё не вёл учёт.
+function activeMonths(rows) {
+  const present = new Set(rows.map(r => r[2]));
+  return monthsInScope().filter(m => present.has(DATA.months.indexOf(m)));
+}
+const sum = rows => rows.reduce((a, r) => a + r[5], 0);
+function rollup(rows, keyFn) {
+  const out = new Map();
+  rows.forEach(r => out.set(keyFn(r), (out.get(keyFn(r)) || 0) + r[5]));
+  return out;
+}
+const IDX_VAC = DATA.categories.indexOf('Отпуск');
+const IDX_COM = DATA.categories.indexOf('Коммерческие');
+function billable(rows) {
+  const total = sum(rows), vac = sum(rows.filter(r => r[3] === IDX_VAC));
+  const com = sum(rows.filter(r => r[3] === IDX_COM));
+  const base = total - vac;
+  return { total, vac, com, base, share: base > 0 ? com / base * 100 : 0 };
+}
+
+/* ── Тултип ────────────────────────────────────────────────────── */
+const tip = document.getElementById('tip');
+function showTip(e, title, rows) {
+  tip.innerHTML = '<div class="t">' + title + '</div>' +
+    rows.map(r => '<div class="r"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>').join('');
+  tip.style.opacity = '1';
+  const box = tip.getBoundingClientRect();
+  const src = e.target.getBoundingClientRect();
+  const x = (e.clientX || src.left + src.width / 2) + 14;
+  const y = (e.clientY || src.top) + 14;
+  tip.style.left = Math.min(x, innerWidth - box.width - 10) + 'px';
+  tip.style.top = Math.min(y, innerHeight - box.height - 10) + 'px';
+}
+const hideTip = () => { tip.style.opacity = '0'; };
+function attach(el, title, rows) {
+  el.tabIndex = 0;
+  el.setAttribute('role', 'img');
+  el.setAttribute('aria-label', title + '. ' + rows.map(r => r[0] + ': ' + r[1]).join('; '));
+  el.onmousemove = e => showTip(e, title, rows);
+  el.onmouseleave = hideTip;
+  el.onfocus = e => showTip(e, title, rows);
+  el.onblur = hideTip;
+}
+
+/* ── Мини-хелперы SVG ──────────────────────────────────────────── */
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) {
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+function clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); return svg; }
+// Столбик с 4px скруглением сверху и прямым низом у базовой линии
+function capRect(p, x, y, w, h, fill, r) {
+  r = Math.min(r === undefined ? 4 : r, w / 2, h);
+  if (h <= 0.5) return null;
+  const d = 'M' + x + ' ' + (y + h) + 'V' + (y + r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + -r +
+    'h' + (w - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r + 'V' + (y + h) + 'Z';
+  return el('path', { d: d, fill: fill }, p);
+}
+function barRect(p, x, y, w, h, fill, r) {  // горизонтальный, скругление справа
+  r = Math.min(r === undefined ? 4 : r, h / 2, w);
+  if (w <= 0.5) return null;
+  const d = 'M' + x + ' ' + y + 'h' + (w - r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r +
+    'v' + (h - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + -r + ' ' + r + 'H' + x + 'Z';
+  return el('path', { d: d, fill: fill }, p);
+}
+function niceTicks(max, count) {
+  const raw = max / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].find(s => s * mag >= raw) * mag;
+  const out = [];
+  for (let v = 0; v <= max + step * 0.001; v += step) out.push(v);
+  return out;
+}
+// Ширина текста ~0.55em: до отрисовки подписи внутри сегмента надо знать, влезет ли
+const textFits = (text, size, avail) => text.length * size * 0.55 + 12 <= avail;
+
+/* ── Легенды ───────────────────────────────────────────────────── */
+function catLegend(host) {
+  host.innerHTML = DATA.categories.map((c, i) =>
+    '<span class="lg"><span class="sw" style="background:var(' + CAT_VARS[i] + ')"></span>' + c + '</span>'
+  ).join('');
+}
+function seqLegend(host, maxShare) {
+  host.innerHTML = '<span class="lg">доля времени человека</span>' +
+    SEQ.map((v, i) => '<span class="lg"><span class="sw" style="background:var(' + v + ')"></span>' +
+      Math.round(maxShare * (i / SEQ.length) * 100) + '%+</span>').join('');
+}
+
+/* ── 1. Структура времени по месяцам ───────────────────────────── */
+function chartMonths(rows) {
+  const svg = clear(document.getElementById('c-months'));
+  const months = activeMonths(rows);
+  const L = 52, R = 34, T = 26, B = 42;
+  const slot = Math.max(40, Math.min(64, 900 / months.length));
+  const W = L + R + slot * months.length, H = 300;
+  svg.setAttribute('width', W); svg.setAttribute('height', H + T + B);
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + (H + T + B));
+
+  const byMonth = months.map(m => {
+    const mi = DATA.months.indexOf(m);
+    const r = rows.filter(x => x[2] === mi);
+    return { m: m, cats: DATA.categories.map((_, ci) => sum(r.filter(x => x[3] === ci))), bill: billable(r) };
+  });
+  const max = Math.max(1, ...byMonth.map(d => d.cats.reduce((a, b) => a + b, 0)));
+  // запас сверху, иначе подпись над самой высокой колонкой уезжает за край карточки
+  const ticks = niceTicks(max * 1.1, 4);
+  const top = ticks[ticks.length - 1];
+  const y = v => T + H - v / top * H;
+
+  ticks.forEach(t => {
+    el('line', { x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: cssVar('--grid'), 'stroke-width': 1 }, svg);
+    el('text', { x: L - 8, y: y(t) + 4, 'text-anchor': 'end', class: 'tick' }, svg).textContent = fmt(t);
+  });
+  el('line', { x1: L, x2: W - R, y1: y(0), y2: y(0), stroke: cssVar('--axis'), 'stroke-width': 1 }, svg);
+
+  const bw = Math.min(24, slot - 12);
+  byMonth.forEach((d, i) => {
+    const x = L + slot * i + (slot - bw) / 2;
+    let acc = 0;
+    d.cats.forEach((v, ci) => {
+      if (v <= 0) return;
+      const h = v / top * H, y0 = y(acc + v);
+      const isTop = d.cats.slice(ci + 1).every(z => z <= 0);
+      // 2px разрыв цветом поверхности между сегментами — вместо обводки
+      capRect(svg, x, y0, bw, h - (acc > 0 ? 2 : 0), cssVar(CAT_VARS[ci]), isTop ? 4 : 0);
+      acc += v;
+    });
+    const total = acc;
+    if (total > 0) {
+      el('text', { x: x + bw / 2, y: y(total) - 8, 'text-anchor': 'middle', class: 'val' }, svg)
+        .textContent = Math.round(d.bill.share) + '%';
+    }
+    // месяц на каждой колонке, год — только там, где он меняется: иначе «сен 24» слипаются
+    el('text', { x: x + bw / 2, y: T + H + 16, 'text-anchor': 'middle', class: 'tick' }, svg)
+      .textContent = MONTH_RU[+d.m.slice(5, 7) - 1];
+    if (i === 0 || d.m.slice(0, 4) !== byMonth[i - 1].m.slice(0, 4)) {
+      el('text', { x: x + bw / 2, y: T + H + 30, 'text-anchor': 'middle', class: 'tick' }, svg)
+        .textContent = d.m.slice(0, 4);
+    }
+    const hit = el('rect', { x: L + slot * i, y: T, width: slot, height: H, class: 'hit' }, svg);
+    attach(hit, monthLabel(d.m),
+      DATA.categories.map((c, ci) => [c, fmt1(d.cats[ci]) + ' ч'])
+        .concat([['Коммерческая загрузка', pct(d.bill.share)]]));
+  });
+  el('text', { x: L, y: 12, class: 'tick' }, svg).textContent = 'часов';
+
+  tableFrom('t-months', ['Месяц'].concat(DATA.categories, ['Всего', '% комм.']),
+    byMonth.map(d => [monthLabel(d.m)].concat(d.cats.map(fmt1),
+      [fmt1(d.cats.reduce((a, b) => a + b, 0)), pct(d.bill.share)])));
+}
+
+/* ── 2. Профиль занятости сотрудников ──────────────────────────── */
+function chartPeople(rows) {
+  const svg = clear(document.getElementById('c-people'));
+  const people = peopleInScope();
+  const L = 96, R = 108, T = 8, rowH = 40, bh = 20;
+  const W = 900, H = T + rowH * people.length + 8;
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  const plotW = W - L - R;
+
+  const data = people.map(p => {
+    const pi = DATA.people.indexOf(p);
+    const r = rows.filter(x => x[0] === pi);
+    return { p: p, cats: DATA.categories.map((_, ci) => sum(r.filter(x => x[3] === ci))), bill: billable(r) };
+  }).sort((a, b) => b.bill.share - a.bill.share);
+
+  data.forEach((d, i) => {
+    const total = d.cats.reduce((a, b) => a + b, 0);
+    const yy = T + rowH * i + (rowH - bh) / 2;
+    el('text', { x: L - 12, y: yy + bh / 2 + 4, 'text-anchor': 'end', class: 'name' }, svg).textContent = d.p;
+    if (total <= 0) return;
+    let acc = 0;
+    d.cats.forEach((v, ci) => {
+      if (v <= 0) return;
+      const w = v / total * plotW, x0 = L + acc / total * plotW;
+      const isLast = d.cats.slice(ci + 1).every(z => z <= 0);
+      barRect(svg, x0, yy, w - (isLast ? 0 : 2), bh, cssVar(CAT_VARS[ci]), isLast ? 4 : 0);
+      const share = v / total * 100;
+      // подпись только если реально влезает — иначе её несут легенда и тултип
+      if (textFits(Math.round(share) + '%', 11, w)) {
+        const t = el('text', {
+          x: x0 + w / 2, y: yy + bh / 2 + 4, 'text-anchor': 'middle',
+          style: 'font-size:11px;font-weight:600;fill:' + inkOn(cssVar(CAT_VARS[ci]))
+        }, svg);
+        t.textContent = Math.round(share) + '%';
+      }
+      acc += v;
+    });
+    el('text', { x: W - R + 12, y: yy + bh / 2 + 4, class: 'val' }, svg)
+      .textContent = pct(d.bill.share) + ' комм.';
+    const hit = el('rect', { x: L, y: T + rowH * i, width: plotW + R, height: rowH, class: 'hit' }, svg);
+    attach(hit, d.p, DATA.categories.map((c, ci) => [c, fmt1(d.cats[ci]) + ' ч'])
+      .concat([['Всего', fmt1(total) + ' ч'], ['Коммерческая загрузка', pct(d.bill.share)]]));
+  });
+
+  tableFrom('t-people', ['Сотрудник'].concat(DATA.categories, ['Всего', 'Комм. загрузка']),
+    data.map(d => [d.p].concat(d.cats.map(fmt1),
+      [fmt1(d.cats.reduce((a, b) => a + b, 0)), pct(d.bill.share)])));
+}
+
+/* ── 3. Матрица «сотрудник × проект» ───────────────────────────── */
+function chartMatrix(rows) {
+  const svg = clear(document.getElementById('c-matrix'));
+  const people = peopleInScope();
+  const byProj = rollup(rows, r => r[1]);
+  const top = [...byProj.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14).map(e => e[0]);
+  const totalsByPerson = new Map(people.map(p => {
+    const pi = DATA.people.indexOf(p);
+    return [pi, sum(rows.filter(r => r[0] === pi))];
+  }));
+
+  const L = 96, T = 96, cw = 54, ch = 34, R = 70;
+  const W = L + cw * top.length + R, H = T + ch * people.length + 12;
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+
+  const cell = new Map();
+  rows.forEach(r => { const k = r[0] + '|' + r[1]; cell.set(k, (cell.get(k) || 0) + r[5]); });
+  const shares = [];
+  people.forEach(p => {
+    const pi = DATA.people.indexOf(p);
+    top.forEach(pr => {
+      const t = totalsByPerson.get(pi) || 0;
+      if (t > 0) shares.push((cell.get(pi + '|' + pr) || 0) / t);
+    });
+  });
+  const maxShare = Math.max(0.01, ...shares);
+
+  top.forEach((pr, j) => {
+    const name = DATA.projects[pr].name;
+    const x = L + cw * j + cw / 2;
+    const t = el('text', {
+      x: x, y: T - 10, class: 'tick',
+      transform: 'rotate(-40 ' + x + ' ' + (T - 10) + ')', 'text-anchor': 'start'
+    }, svg);
+    t.textContent = name.length > 22 ? name.slice(0, 21) + '…' : name;
+  });
+
+  people.forEach((p, i) => {
+    const pi = DATA.people.indexOf(p);
+    const total = totalsByPerson.get(pi) || 0;
+    const y = T + ch * i;
+    el('text', { x: L - 12, y: y + ch / 2 + 4, 'text-anchor': 'end', class: 'name' }, svg).textContent = p;
+    top.forEach((pr, j) => {
+      const v = cell.get(pi + '|' + pr) || 0;
+      const share = total > 0 ? v / total : 0;
+      const step = v <= 0 ? -1 : Math.min(SEQ.length - 1, Math.floor(share / maxShare * SEQ.length));
+      const fill = cssVar(step < 0 ? '--seq-0' : SEQ[step]);
+      // 2px разрыв поверхностью вместо рамки вокруг ячейки
+      const rect = el('rect', {
+        x: L + cw * j + 1, y: y + 1, width: cw - 3, height: ch - 3, rx: 4, fill: fill
+      }, svg);
+      if (v > 0) {
+        el('text', {
+          x: L + cw * j + cw / 2, y: y + ch / 2 + 4, 'text-anchor': 'middle',
+          style: 'font-size:10.5px;font-variant-numeric:tabular-nums;fill:' + inkOn(fill)
+        }, svg).textContent = v < 0.5 ? '<1' : fmt(v);
+      }
+      attach(rect, p + ' · ' + DATA.projects[pr].name,
+        [['Часы', fmt1(v)], ['Доля времени', pct(share * 100)],
+         ['Статус проекта', DATA.projects[pr].status || '—']]);
+    });
+    el('text', { x: L + cw * top.length + 12, y: y + ch / 2 + 4, class: 'val' }, svg)
+      .textContent = fmt(total) + ' ч';
+  });
+
+  seqLegend(document.getElementById('lg-seq'), maxShare);
+  tableFrom('t-matrix', ['Сотрудник'].concat(top.map(pr => DATA.projects[pr].name), ['Всего']),
+    people.map(p => {
+      const pi = DATA.people.indexOf(p);
+      return [p].concat(top.map(pr => fmt1(cell.get(pi + '|' + pr) || 0)),
+        [fmt1(totalsByPerson.get(pi) || 0)]);
+    }));
+}
+
+/* ── 4. Проекты по объёму часов ────────────────────────────────── */
+function chartProjects(rows) {
+  const svg = clear(document.getElementById('c-proj'));
+  const agg = new Map();
+  rows.forEach(r => {
+    const e = agg.get(r[1]) || { h: 0, people: new Set(), cat: r[3] };
+    e.h += r[5]; e.people.add(r[0]);
+    agg.set(r[1], e);
+  });
+  const list = [...agg.entries()].sort((a, b) => b[1].h - a[1].h).slice(0, 16);
+  const L = 210, R = 130, T = 6, rowH = 30, bh = 16;
+  const W = 900, H = T + rowH * list.length + 8;
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  const plotW = W - L - R;
+  const max = Math.max(1, ...list.map(e => e[1].h));
+
+  list.forEach((e, i) => {
+    const [pr, v] = e;
+    const meta = DATA.projects[pr];
+    const y = T + rowH * i + (rowH - bh) / 2;
+    const name = meta.name.length > 30 ? meta.name.slice(0, 29) + '…' : meta.name;
+    el('text', { x: L - 12, y: y + bh / 2 + 4, 'text-anchor': 'end', class: 'name' }, svg).textContent = name;
+    const w = v.h / max * plotW;
+    barRect(svg, L, y, w, bh, cssVar('--s1'));
+    el('text', { x: L + w + 10, y: y + bh / 2 + 4, class: 'val' }, svg).textContent = fmt(v.h) + ' ч';
+    el('text', { x: L + w + 10 + 58, y: y + bh / 2 + 4, class: 'tick' }, svg)
+      .textContent = v.people.size + ' чел.';
+    const hit = el('rect', { x: 0, y: T + rowH * i, width: W, height: rowH, class: 'hit' }, svg);
+    attach(hit, meta.name, [['Часы', fmt1(v.h)], ['Людей', String(v.people.size)],
+      ['Статус', meta.status || '—'], ['РП', meta.rp || '—']]);
+  });
+
+  tableFrom('t-proj', ['Проект', 'Часы', 'Людей', 'Статус', 'РП'],
+    list.map(([pr, v]) => [DATA.projects[pr].name, fmt1(v.h), String(v.people.size),
+      DATA.projects[pr].status || '—', DATA.projects[pr].rp || '—']));
+}
+
+/* ── 5. Макрогруппы работ ──────────────────────────────────────── */
+function chartMacro(rows) {
+  const svg = clear(document.getElementById('c-macro'));
+  const agg = rollup(rows, r => r[4]);
+  const list = [...agg.entries()].filter(e => e[1] > 0).sort((a, b) => b[1] - a[1]);
+  const total = list.reduce((a, e) => a + e[1], 0) || 1;
+  const L = 210, R = 120, T = 6, rowH = 30, bh = 16;
+  const W = 900, H = T + rowH * list.length + 8;
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  const plotW = W - L - R;
+  const max = Math.max(1, ...list.map(e => e[1]));
+
+  list.forEach(([mi, v], i) => {
+    const y = T + rowH * i + (rowH - bh) / 2;
+    el('text', { x: L - 12, y: y + bh / 2 + 4, 'text-anchor': 'end', class: 'name' }, svg)
+      .textContent = DATA.macros[mi];
+    const w = v / max * plotW;
+    barRect(svg, L, y, w, bh, cssVar('--s1'));
+    el('text', { x: L + w + 10, y: y + bh / 2 + 4, class: 'val' }, svg).textContent = fmt(v) + ' ч';
+    el('text', { x: L + w + 10 + 58, y: y + bh / 2 + 4, class: 'tick' }, svg)
+      .textContent = pct(v / total * 100);
+    const hit = el('rect', { x: 0, y: T + rowH * i, width: W, height: rowH, class: 'hit' }, svg);
+    attach(hit, DATA.macros[mi], [['Часы', fmt1(v)], ['Доля', pct(v / total * 100)]]);
+  });
+
+  tableFrom('t-macro', ['Макрогруппа', 'Часы', 'Доля'],
+    list.map(([mi, v]) => [DATA.macros[mi], fmt1(v), pct(v / total * 100)]));
+}
+
+/* ── Таблицы-двойники ──────────────────────────────────────────── */
+function tableFrom(id, head, rows) {
+  const host = document.getElementById(id);
+  host.innerHTML = '<table><thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    rows.map(r => '<tr>' + r.map((c, i) =>
+      '<td' + (i === 0 ? ' class="name"' : '') + '>' + c + '</td>').join('') + '</tr>').join('') +
+    '</tbody></table>';
+}
+document.querySelectorAll('[data-table]').forEach(btn => {
+  btn.onclick = () => {
+    const host = document.getElementById(btn.dataset.table);
+    const open = host.hidden;
+    host.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    btn.textContent = open ? 'Скрыть таблицу' : 'Таблица';
+  };
+});
+
+/* ── KPI ───────────────────────────────────────────────────────── */
+function kpis(rows) {
+  const b = billable(rows);
+  const people = peopleInScope();
+  const months = activeMonths(rows);
+  const projects = new Set(rows.map(r => r[1]));
+  const commProjects = new Set(rows.filter(r => r[3] === IDX_COM).map(r => r[1]));
+  const perMonth = b.base / Math.max(1, months.length) / Math.max(1, people.length);
+  document.getElementById('kpis').innerHTML = [
+    ['hero', 'Коммерческая загрузка', pct(b.share),
+      fmt(b.com) + ' ч из ' + fmt(b.base) + ' ч рабочего времени'],
+    ['', 'Всего залогировано', fmt(b.total) + ' ч',
+      people.length + ' чел. · ' + months.length + ' мес.'],
+    ['', 'Внутренние и пресейл', fmt(b.base - b.com) + ' ч',
+      pct((b.base - b.com) / Math.max(1, b.base) * 100) + ' рабочего времени'],
+    ['', 'Проектов в работе', String(projects.size),
+      commProjects.size + ' коммерческих'],
+    ['', 'Часов на человека в месяц', fmt(perMonth),
+      'без отпуска, в среднем за период'],
+  ].map(([cls, label, value, foot]) =>
+    '<div class="kpi ' + cls + '"><div class="label">' + label + '</div>' +
+    '<div class="value">' + value + '</div><div class="foot">' + foot + '</div></div>'
+  ).join('');
+}
+
+/* ── Рендер ────────────────────────────────────────────────────── */
+function render() {
+  buildFilters();
+  const rows = slice();
+  catLegend(document.getElementById('lg-cat'));
+  catLegend(document.getElementById('lg-cat2'));
+  kpis(rows);
+  chartMonths(rows);
+  chartPeople(rows);
+  chartMatrix(rows);
+  chartProjects(rows);
+  chartMacro(rows);
+}
+
+const skipped = DATA.people.filter(p => !CORE.includes(p));
+document.getElementById('hdr').textContent =
+  DATA.meta.source + ' · ' + DATA.meta.period[0] + ' — ' + DATA.meta.period[1] +
+  ' · ' + fmt(DATA.meta.hours) + ' ч в ' + fmt(DATA.meta.rows) + ' записях';
+document.getElementById('ft-issues').innerHTML =
+  '<b>Ограничения данных.</b> «Постоянный состав» — сотрудники, у которых учёт идёт 12+ месяцев подряд: ' +
+  CORE.join(', ') + '. У остальных (' + (skipped.join(', ') || '—') +
+  ') вкладки заполнены фрагментарно, часть команды ведёт учёт в отдельных файлах — по ним выводы делать нельзя. ' +
+  'Строк с непрочитанными часами: ' + DATA.meta.issues.length + '.';
+
+render();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+addEventListener('resize', () => { hideTip(); });
+</script>
