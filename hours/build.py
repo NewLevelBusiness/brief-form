@@ -139,11 +139,15 @@ def read_projects(wb):
     return projects
 
 
-def read_facts(wb, projects):
+def read_facts(wb, projects, only_person=None):
+    """Разбирает вкладки сотрудников. only_person ограничивает разбор одной
+    вкладкой — нужно для персональных файлов, где рядом лежат чужие копии."""
     facts, issues = [], []
     for ws in wb.worksheets:
         person = ws.title
         if person in SERVICE_SHEETS:
+            continue
+        if only_person is not None and person != only_person:
             continue
         header_row, cells = find_header(ws)
         if header_row is None:
@@ -209,9 +213,16 @@ def match_people(plan_names, fact_names):
     чтобы сравнение план/факт не приписало часы не тому человеку.
     """
     fact_by_key = {norm(f).lower(): f for f in fact_names}
+    # Персональные файлы дают человека полным именем, вкладки основного — коротким.
+    # Порядок слов в ФИО в двух источниках разный, поэтому сравниваем множествами.
+    fact_by_tokens = {frozenset(norm(f).lower().split()): f for f in fact_names}
     claims = defaultdict(list)
     for full in plan_names:
         parts = norm(full).split()
+        exact = fact_by_tokens.get(frozenset(p.lower() for p in parts))
+        if exact:
+            claims[exact].append(full)
+            continue
         for token in parts[1:] or parts:  # обычно «Фамилия Имя», но не всегда
             low = token.lower()
             hit = fact_by_key.get(DIMINUTIVES.get(low, low)) or fact_by_key.get(low)
@@ -298,12 +309,87 @@ def categorize(fact, projects):
     return "Внутренние (NLB)"
 
 
+def row_key(fact):
+    """Ключ строки для поиска дублей между файлами. Тип работ входит в ключ: без
+    него двое, отметившие в один день по часу на одном проекте, выглядят как дубль."""
+    return (fact["date"], round(fact["hours"], 2), fact["project"], fact["work_type"])
+
+
+# Если персональный файл содержит почти все строки одноимённой вкладки основного
+# файла, значит вкладка — устаревший огрызок того же учёта, и её надо выбросить.
+SUPERSEDE_THRESHOLD = 0.9
+# Ниже этой доли пересечение — совпадение независимых записей, а не дубль.
+COINCIDENCE_RATIO = 0.2
+COINCIDENCE_ROWS = 20
+
+
+def read_extra_facts(projects, main_facts):
+    """Часть команды ведёт учёт в собственных файлах — ссылки на них лежат в листе
+    «справочники» в колонке «Ссылки на учет рабочих часов».
+
+    Имя человека берётся из имени файла, а не из названия вкладки: у двух разных
+    сотрудников вкладки могут называться одинаково («Саша» у обоих Александров),
+    и по вкладке их не различить.
+
+    Возвращает (строки, замечания, что_добавлено, каких_людей_убрать_из_основного).
+    """
+    folder = os.path.join(HERE, "extra")
+    if not os.path.isdir(folder):
+        return [], [], [], set()
+
+    main_by_person = defaultdict(set)
+    for fact in main_facts:
+        main_by_person[fact["person"]].add(row_key(fact))
+
+    facts, issues, added, superseded = [], [], [], set()
+    for filename in sorted(os.listdir(folder)):
+        if not filename.endswith(".xlsx") or filename.startswith("~"):
+            continue
+        person = os.path.splitext(filename)[0]
+        wb = openpyxl.load_workbook(os.path.join(folder, filename), data_only=True)
+        rows, problems = read_facts(wb, projects)
+        # в персональных файлах рядом лежат рабочие листы без учёта часов — это норма
+        issues += [f"{filename}: {p}" for p in problems if "не найдена шапка" not in p]
+        for fact in rows:
+            fact["person"] = person
+        keys = {row_key(f) for f in rows}
+
+        # с кем из основного файла этот человек пересекается
+        for main_person, main_keys in main_by_person.items():
+            if main_person in superseded or not main_keys:
+                continue
+            shared = len(main_keys & keys)
+            if not shared:
+                continue
+            ratio = shared / len(main_keys)
+            if ratio >= SUPERSEDE_THRESHOLD:
+                superseded.add(main_person)
+                added.append((filename, person, None,
+                              f"заменяет вкладку «{main_person}» основного файла "
+                              f"({len(main_keys)} строк, совпадение {ratio * 100:.0f}%)"))
+            elif ratio >= COINCIDENCE_RATIO and shared >= COINCIDENCE_ROWS:
+                issues.append(
+                    f"{filename}: {shared} строк совпадают с вкладкой «{main_person}» "
+                    f"основного файла ({ratio * 100:.0f}% её объёма) — часы задвоятся, "
+                    f"проверьте, один ли это человек")
+
+        facts += rows
+        added.append((filename, person, len(rows), sum(f["hours"] for f in rows)))
+    return facts, issues, added, superseded
+
+
 def main():
     wb = openpyxl.load_workbook(SRC, data_only=True)
     projects = read_projects(wb)
     facts, issues = read_facts(wb, projects)
     if not facts:
         sys.exit("Не удалось прочитать ни одной строки факта")
+
+    extra_facts, extra_issues, extra_added, superseded = read_extra_facts(projects, facts)
+    if superseded:
+        facts = [f for f in facts if f["person"] not in superseded]
+    facts += extra_facts
+    issues += extra_issues
 
     # Одно и то же название, набранное вперемешку кириллицей и латиницей, должно
     # стать одним проектом. Каноническим считаем написание из справочника.
@@ -425,6 +511,13 @@ def main():
     with open(os.path.join(HERE, "dashboard.html"), "w", encoding="utf-8") as fh:
         fh.write(html)
 
+    if extra_added:
+        print("подключены персональные файлы учёта:")
+        for filename, person, rows_count, payload in extra_added:
+            if rows_count is None:
+                print(f"   {filename}: {payload}")
+            else:
+                print(f"   {filename} → «{person}»: {rows_count} строк, {payload:.0f} ч")
     print(f"строк факта: {len(facts)}  часов: {data['meta']['hours']}")
     print(f"период: {data['meta']['period'][0]} — {data['meta']['period'][1]}")
     print(f"сотрудников: {len(people)}  проектов: {len(project_names)}  месяцев: {len(months)}")

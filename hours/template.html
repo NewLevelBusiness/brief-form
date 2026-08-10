@@ -435,6 +435,10 @@ function niceTicks(max, count) {
 }
 // Ширина текста ~0.55em: до отрисовки подписи внутри сегмента надо знать, влезет ли
 const textFits = (text, size, avail) => text.length * size * 0.55 + 12 <= avail;
+// Слева от графика — подписи сотрудников. Их длина зависит от того, подключены ли
+// персональные файлы (там люди названы полным именем), поэтому поле считаем по данным.
+const labelGutter = (names, size, min) =>
+  Math.max(min, Math.min(240, Math.max(...names.map(n => n.length)) * size * 0.62 + 28));
 
 /* ── Легенды ───────────────────────────────────────────────────── */
 function catLegend(host) {
@@ -662,7 +666,7 @@ function chartDeviation(sc) {
 function chartPeople(rows) {
   const svg = clear(document.getElementById('c-people'));
   const people = peopleInScope();
-  const L = 96, R = 108, T = 8, rowH = 40, bh = 20;
+  const L = labelGutter(people, 12, 96), R = 108, T = 8, rowH = 40, bh = 20;
   const W = 900, H = T + rowH * people.length + 8;
   svg.setAttribute('width', W); svg.setAttribute('height', H);
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
@@ -719,7 +723,7 @@ function chartMatrix(rows) {
     return [pi, sum(rows.filter(r => r[0] === pi))];
   }));
 
-  const L = 96, T = 96, cw = 54, ch = 34, R = 70;
+  const L = labelGutter(people, 12, 96), T = 96, cw = 54, ch = 34, R = 70;
   const W = L + cw * top.length + R, H = T + ch * people.length + 12;
   svg.setAttribute('width', W); svg.setAttribute('height', H);
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
