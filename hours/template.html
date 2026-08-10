@@ -18,6 +18,8 @@
   --seq-0: #f0efec; --seq-1: #cde2fb; --seq-2: #9ec5f4; --seq-3: #6da7ec;
   --seq-4: #3987e5; --seq-5: #256abf; --seq-6: #184f95; --seq-7: #0d366b;
   --good: #0ca30c; --critical: #d03b3b;
+  --div-pos: #2a78d6;  /* факт выше плана */
+  --div-neg: #e34948;  /* факт ниже плана */
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
@@ -34,6 +36,7 @@
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
     --seq-0: #383835; --seq-1: #184f95; --seq-2: #256abf; --seq-3: #2a78d6;
     --seq-4: #3987e5; --seq-5: #5598e7; --seq-6: #86b6ef; --seq-7: #cde2fb;
+    --div-pos: #3987e5; --div-neg: #e66767;
   }
 }
 :root[data-theme="dark"] {
@@ -50,6 +53,7 @@
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
   --seq-0: #383835; --seq-1: #184f95; --seq-2: #256abf; --seq-3: #2a78d6;
   --seq-4: #3987e5; --seq-5: #5598e7; --seq-6: #86b6ef; --seq-7: #cde2fb;
+  --div-pos: #3987e5; --div-neg: #e66767;
 }
 
 * { box-sizing: border-box; }
@@ -116,6 +120,9 @@ svg text.name { fill: var(--text-primary); font-size: 12px; }
 .hit:focus-visible { fill: var(--wash); outline: none; }
 
 /* ── Тултип ───────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
 #tip {
   position: fixed; pointer-events: none; z-index: 50; opacity: 0;
   transition: opacity .1s; max-width: 300px;
@@ -177,10 +184,32 @@ footer li { margin-bottom: 5px; }
       <h2>Структура времени по месяцам</h2>
       <button class="tbtn" data-table="t-months" aria-expanded="false">Таблица</button>
     </div>
-    <p class="card-note">Все залогированные часы, разложенные по типу занятости. Подпись над колонкой — доля коммерческих часов в месяце.</p>
+    <p class="card-note">Все залогированные часы, разложенные по типу занятости. Подпись над колонкой — доля коммерческих часов в месяце.<span id="note-partial"></span></p>
     <div class="legend" id="lg-cat"></div>
     <div class="scroll"><svg id="c-months" role="img" aria-label="Часы по месяцам в разрезе типа занятости"></svg></div>
     <div id="t-months" hidden></div>
+  </section>
+
+  <section class="card" id="card-plan" hidden>
+    <div class="card-head">
+      <h2>План и факт коммерческих часов</h2>
+      <button class="tbtn" data-table="t-plan" aria-expanded="false">Таблица</button>
+    </div>
+    <p class="card-note" id="plan-note"></p>
+    <div class="legend" id="lg-plan"></div>
+    <div class="scroll"><svg id="c-plan" role="img" aria-label="План и факт коммерческих часов по месяцам"></svg></div>
+    <div id="t-plan" hidden></div>
+  </section>
+
+  <section class="card" id="card-dev" hidden>
+    <div class="card-head">
+      <h2>Отклонение от плана по проектам</h2>
+      <button class="tbtn" data-table="t-dev" aria-expanded="false">Таблица</button>
+    </div>
+    <p class="card-note">Факт минус план в часах. Вправо — сделали больше, чем планировали, влево — меньше. Проекты, которых нет в плане, показаны целиком как перевыполнение.</p>
+    <div class="legend" id="lg-dev"></div>
+    <div class="scroll"><svg id="c-dev" role="img" aria-label="Отклонение факта от плана по проектам"></svg></div>
+    <div id="t-dev" hidden></div>
   </section>
 
   <section class="card">
@@ -261,6 +290,19 @@ const fmt1 = n => (Math.round(n * 10) / 10).toLocaleString('ru-RU');
 const pct = n => (Math.round(n * 10) / 10).toLocaleString('ru-RU') + '%';
 const MONTH_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
 const monthLabel = m => MONTH_RU[+m.slice(5, 7) - 1] + ' ' + m.slice(2, 4);
+
+// Последний месяц выгрузки почти всегда оборван на середине. Без пометки его
+// «недовыполнение плана» читается как провал, хотя месяц просто не закончился.
+const PARTIAL = (() => {
+  const last = new Date(DATA.meta.period[1] + 'T00:00:00');
+  const lastDayOfMonth = new Date(last.getFullYear(), last.getMonth() + 1, 0).getDate();
+  return last.getDate() < lastDayOfMonth ? DATA.meta.period[1].slice(0, 7) : null;
+})();
+const partialNote = PARTIAL
+  ? ' Звёздочкой отмечен незакрытый месяц: факт в нём только по ' +
+    DATA.meta.period[1].split('-').reverse().join('.') + '.'
+  : '';
+const mLabel = m => monthLabel(m) + (m === PARTIAL ? '*' : '');
 
 // Постоянный состав — сплошной учёт (12+ месяцев) и объём, на котором доли что-то значат.
 // Без порога по часам сюда попадают те, кто отметился парой часов в год.
@@ -458,15 +500,162 @@ function chartMonths(rows) {
         .textContent = d.m.slice(0, 4);
     }
     const hit = el('rect', { x: L + slot * i, y: T, width: slot, height: H, class: 'hit' }, svg);
-    attach(hit, monthLabel(d.m),
+    attach(hit, mLabel(d.m),
       DATA.categories.map((c, ci) => [c, fmt1(d.cats[ci]) + ' ч'])
         .concat([['Коммерческая загрузка', pct(d.bill.share)]]));
   });
   el('text', { x: L, y: 12, class: 'tick' }, svg).textContent = 'часов';
 
   tableFrom('t-months', ['Месяц'].concat(DATA.categories, ['Всего', '% комм.']),
-    byMonth.map(d => [monthLabel(d.m)].concat(d.cats.map(fmt1),
+    byMonth.map(d => [mLabel(d.m)].concat(d.cats.map(fmt1),
       [fmt1(d.cats.reduce((a, b) => a + b, 0)), pct(d.bill.share)])));
+}
+
+/* ── 1б. План и факт коммерческих часов ────────────────────────── */
+const PLAN = DATA.plan;
+// План есть только по сопоставленным людям и только за месяцы плана. Сравнивать
+// факт всей команды с планом части команды нельзя — срез сужается до пересечения.
+function planScope(rows) {
+  if (!PLAN || !PLAN.cells.length) return null;
+  const people = peopleInScope().filter(p => p in PLAN.mapping);
+  if (!people.length) return null;
+  const pset = new Set(people.map(p => DATA.people.indexOf(p)));
+  const mset = new Set(monthsInScope().filter(m => PLAN.months.includes(m))
+    .map(m => DATA.months.indexOf(m)));
+  if (!mset.size) return null;
+  return {
+    people: people,
+    months: [...mset].sort((a, b) => a - b),
+    plan: PLAN.cells.filter(r => pset.has(r[0]) && mset.has(r[2])),
+    fact: rows.filter(r => pset.has(r[0]) && mset.has(r[2]) && r[3] === IDX_COM),
+  };
+}
+
+function chartPlan(rows) {
+  const sc = planScope(rows);
+  document.getElementById('card-plan').hidden = !sc;
+  document.getElementById('card-dev').hidden = !sc;
+  if (!sc) return;
+
+  document.getElementById('plan-note').innerHTML =
+    'Лист «' + PLAN.sheet + '». Сравнение идёт только по тем, кого удалось сшить с планом (' +
+    sc.people.join(', ') + '), и только за месяцы плана. ' +
+    (PLAN.unmatched.length
+      ? '<b>' + fmt(PLAN.unmatched_hours) + ' ч плана</b> приходится на людей без вкладки в файле учёта (' +
+        PLAN.unmatched.join(', ') + ') — эти часы в сравнении не участвуют.'
+      : '') + partialNote;
+  document.getElementById('lg-plan').innerHTML =
+    '<span class="lg"><span class="sw" style="background:var(--s1)"></span>Факт</span>' +
+    '<span class="lg"><span class="sw" style="background:var(--s2)"></span>План</span>';
+
+  const L = 52, R = 20, T = 26, B = 42;
+  const slot = Math.max(56, Math.min(90, 860 / sc.months.length));
+  const W = L + R + slot * sc.months.length, H = 250;
+  const svg = clear(document.getElementById('c-plan'));
+  svg.setAttribute('width', W); svg.setAttribute('height', H + T + B);
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + (H + T + B));
+
+  const series = sc.months.map(mi => ({
+    m: DATA.months[mi],
+    fact: sum(sc.fact.filter(r => r[2] === mi)),
+    plan: sc.plan.filter(r => r[2] === mi).reduce((a, r) => a + r[3], 0),
+  }));
+  const ticks = niceTicks(Math.max(1, ...series.map(d => Math.max(d.fact, d.plan))) * 1.12, 4);
+  const top = ticks[ticks.length - 1];
+  const y = v => T + H - v / top * H;
+
+  ticks.forEach(t => {
+    el('line', { x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: cssVar('--grid'), 'stroke-width': 1 }, svg);
+    el('text', { x: L - 8, y: y(t) + 4, 'text-anchor': 'end', class: 'tick' }, svg).textContent = fmt(t);
+  });
+  el('line', { x1: L, x2: W - R, y1: y(0), y2: y(0), stroke: cssVar('--axis'), 'stroke-width': 1 }, svg);
+
+  const bw = Math.min(22, (slot - 14) / 2);
+  series.forEach((d, i) => {
+    const base = L + slot * i + (slot - bw * 2 - 2) / 2;
+    capRect(svg, base, y(d.fact), bw, H - (y(d.fact) - T), cssVar('--s1'));
+    capRect(svg, base + bw + 2, y(d.plan), bw, H - (y(d.plan) - T), cssVar('--s2'));
+    el('text', { x: base + bw, y: T + H + 16, 'text-anchor': 'middle', class: 'tick' }, svg)
+      .textContent = mLabel(d.m);
+    const delta = d.fact - d.plan;
+    if (d.m !== PARTIAL) {
+      el('text', {
+        x: base + bw, y: Math.min(y(d.fact), y(d.plan)) - 8, 'text-anchor': 'middle', class: 'val'
+      }, svg).textContent = (delta >= 0 ? '+' : '−') + fmt(Math.abs(delta));
+    }
+    const hit = el('rect', { x: L + slot * i, y: T, width: slot, height: H, class: 'hit' }, svg);
+    attach(hit, mLabel(d.m), [['Факт', fmt1(d.fact) + ' ч'], ['План', fmt1(d.plan) + ' ч'],
+      ['Отклонение', (delta >= 0 ? '+' : '−') + fmt1(Math.abs(delta)) + ' ч'],
+      ['Выполнение плана', d.plan ? pct(d.fact / d.plan * 100) : '—']]);
+  });
+  el('text', { x: L, y: 12, class: 'tick' }, svg).textContent = 'часов';
+
+  tableFrom('t-plan', ['Месяц', 'План', 'Факт', 'Отклонение', 'Выполнение'],
+    series.map(d => [mLabel(d.m), fmt1(d.plan), fmt1(d.fact),
+      (d.fact - d.plan >= 0 ? '+' : '−') + fmt1(Math.abs(d.fact - d.plan)),
+      d.plan ? pct(d.fact / d.plan * 100) : '—']));
+
+  chartDeviation(sc);
+}
+
+/* ── 1в. Отклонение от плана по проектам (диверджирующая шкала) ─── */
+function chartDeviation(sc) {
+  const svg = clear(document.getElementById('c-dev'));
+  document.getElementById('lg-dev').innerHTML =
+    '<span class="lg"><span class="sw" style="background:var(--div-pos)"></span>Факт больше плана</span>' +
+    '<span class="lg"><span class="sw" style="background:var(--div-neg)"></span>Факт меньше плана</span>';
+
+  const acc = new Map();
+  const bump = (proj, field, v) => {
+    const e = acc.get(proj) || { plan: 0, fact: 0 };
+    e[field] += v; acc.set(proj, e);
+  };
+  sc.plan.forEach(r => bump(r[1], 'plan', r[3]));
+  sc.fact.forEach(r => bump(r[1], 'fact', r[5]));
+  const list = [...acc.entries()]
+    .map(([pi, e]) => ({ pi: pi, plan: e.plan, fact: e.fact, d: e.fact - e.plan }))
+    .filter(e => Math.abs(e.d) >= 1)
+    .sort((a, b) => a.d - b.d);
+
+  const L = 210, R = 150, T = 6, rowH = 30, bh = 16;
+  const W = 900, H = T + rowH * list.length + 8;
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  const plotW = W - L - R;
+  const span = Math.max(1, ...list.map(e => Math.abs(e.d)));
+  const mid = L + plotW / 2;
+  const scale = v => v / span * (plotW / 2);
+
+  el('line', { x1: mid, x2: mid, y1: T, y2: H - 8, stroke: cssVar('--axis'), 'stroke-width': 1 }, svg);
+  list.forEach((e, i) => {
+    const name = DATA.projects[e.pi].name;
+    const y = T + rowH * i + (rowH - bh) / 2;
+    el('text', { x: L - 12, y: y + bh / 2 + 4, 'text-anchor': 'end', class: 'name' }, svg)
+      .textContent = name.length > 30 ? name.slice(0, 29) + '…' : name;
+    const w = Math.abs(scale(e.d));
+    if (e.d >= 0) barRect(svg, mid, y, w, bh, cssVar('--div-pos'));
+    else {
+      // зеркальное скругление: данные-конец слева
+      const r = Math.min(4, bh / 2, w);
+      el('path', {
+        d: 'M' + mid + ' ' + y + 'H' + (mid - w + r) + 'a' + r + ' ' + r + ' 0 0 0 ' + -r + ' ' + r +
+           'v' + (bh - 2 * r) + 'a' + r + ' ' + r + ' 0 0 0 ' + r + ' ' + r + 'H' + mid + 'Z',
+        fill: cssVar('--div-neg')
+      }, svg);
+    }
+    const lx = e.d >= 0 ? mid + w + 10 : mid - w - 10;
+    el('text', {
+      x: lx, y: y + bh / 2 + 4, 'text-anchor': e.d >= 0 ? 'start' : 'end', class: 'val'
+    }, svg).textContent = (e.d >= 0 ? '+' : '−') + fmt(Math.abs(e.d)) + ' ч';
+    const hit = el('rect', { x: 0, y: T + rowH * i, width: W, height: rowH, class: 'hit' }, svg);
+    attach(hit, name, [['План', fmt1(e.plan) + ' ч'], ['Факт', fmt1(e.fact) + ' ч'],
+      ['Отклонение', (e.d >= 0 ? '+' : '−') + fmt1(Math.abs(e.d)) + ' ч'],
+      ['Выполнение', e.plan ? pct(e.fact / e.plan * 100) : 'нет в плане']]);
+  });
+
+  tableFrom('t-dev', ['Проект', 'План', 'Факт', 'Отклонение', 'Выполнение'],
+    list.slice().reverse().map(e => [DATA.projects[e.pi].name, fmt1(e.plan), fmt1(e.fact),
+      (e.d >= 0 ? '+' : '−') + fmt1(Math.abs(e.d)), e.plan ? pct(e.fact / e.plan * 100) : 'нет в плане']));
 }
 
 /* ── 2. Профиль занятости сотрудников ──────────────────────────── */
@@ -689,6 +878,20 @@ function kpis(rows) {
   const projects = new Set(rows.map(r => r[1]));
   const commProjects = new Set(rows.filter(r => r[3] === IDX_COM).map(r => r[1]));
   const perMonth = b.base / Math.max(1, months.length) / Math.max(1, people.length);
+
+  // Выработка от нормы производственного календаря — норма приходит из файла плана.
+  // Считаем только по месяцам, для которых норма известна, иначе доля врёт.
+  let output = null;
+  if (PLAN && Object.keys(PLAN.calendar).length) {
+    const covered = months.filter(m => PLAN.calendar[m] != null);
+    if (covered.length) {
+      const cset = new Set(covered.map(m => DATA.months.indexOf(m)));
+      const logged = sum(rows.filter(r => cset.has(r[2])));
+      const norm = covered.reduce((a, m) => a + PLAN.calendar[m], 0) * people.length;
+      output = { share: norm ? logged / norm * 100 : 0, months: covered.length, norm: norm };
+    }
+  }
+
   document.getElementById('kpis').innerHTML = [
     ['hero', 'Коммерческая загрузка', pct(b.share),
       fmt(b.com) + ' ч из ' + fmt(b.base) + ' ч рабочего времени'],
@@ -700,7 +903,9 @@ function kpis(rows) {
       commProjects.size + ' коммерческих'],
     ['', 'Часов на человека в месяц', fmt(perMonth),
       'без отпуска, в среднем за период'],
-  ].map(([cls, label, value, foot]) =>
+  ].concat(output ? [['', 'Выработка от нормы', pct(output.share),
+    'к производственному календарю, ' + output.months + ' мес.']] : [])
+    .map(([cls, label, value, foot]) =>
     '<div class="kpi ' + cls + '"><div class="label">' + label + '</div>' +
     '<div class="value">' + value + '</div><div class="foot">' + foot + '</div></div>'
   ).join('');
@@ -714,11 +919,14 @@ function render() {
   catLegend(document.getElementById('lg-cat2'));
   kpis(rows);
   chartMonths(rows);
+  chartPlan(rows);
   chartPeople(rows);
   chartMatrix(rows);
   chartProjects(rows);
   chartMacro(rows);
 }
+
+document.getElementById('note-partial').textContent = partialNote;
 
 const skipped = DATA.people.filter(p => !CORE.includes(p));
 document.getElementById('hdr').textContent =
