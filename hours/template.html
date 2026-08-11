@@ -111,6 +111,17 @@ header .sub { font-size: 13px; }
 .sw { width: 11px; height: 11px; border-radius: 3px; flex: none; }
 
 .scroll { overflow-x: auto; }
+/* Столбцы по месяцам и кольцо за период — рядом, на узком экране одно под другим */
+.split { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+.split-main { flex: 1 1 460px; min-width: 0; }
+.split-aside { flex: 0 0 auto; width: 250px; margin: 0; }
+.split-aside figcaption { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 2px; }
+/* Шкала вынесена из прокручиваемой области: иначе при прокрутке к свежим месяцам
+   она уезжает за левый край и значения читать нечем */
+.axis-row { display: flex; align-items: flex-start; }
+/* Ось не сжимать: viewBox отмасштабирует содержимое и уведёт деления от сетки */
+.axis-row > svg { flex: 0 0 auto; }
+.axis-row .scroll { flex: 1 1 auto; min-width: 0; }
 svg { display: block; }
 svg text { fill: var(--text-secondary); font-size: 11px; }
 svg text.tick { fill: var(--text-muted); font-variant-numeric: tabular-nums; }
@@ -186,7 +197,18 @@ footer li { margin-bottom: 5px; }
     </div>
     <p class="card-note">Все залогированные часы, разложенные по типу занятости. Подпись над колонкой — доля коммерческих часов в месяце.<span id="note-partial"></span></p>
     <div class="legend" id="lg-cat"></div>
-    <div class="scroll"><svg id="c-months" role="img" aria-label="Часы по месяцам в разрезе типа занятости"></svg></div>
+    <div class="split">
+      <div class="split-main">
+        <div class="axis-row">
+          <svg id="c-months-axis" aria-hidden="true"></svg>
+          <div class="scroll"><svg id="c-months" role="img" aria-label="Часы по месяцам в разрезе типа занятости"></svg></div>
+        </div>
+      </div>
+      <figure class="split-aside">
+        <svg id="c-donut" role="img" aria-label="Структура времени за весь выбранный период"></svg>
+        <figcaption id="donut-cap"></figcaption>
+      </figure>
+    </div>
     <div id="t-months" hidden></div>
   </section>
 
@@ -455,12 +477,15 @@ function seqLegend(host, maxShare) {
 /* ── 1. Структура времени по месяцам ───────────────────────────── */
 function chartMonths(rows) {
   const svg = clear(document.getElementById('c-months'));
+  const axisSvg = clear(document.getElementById('c-months-axis'));
   const months = activeMonths(rows);
   const L = 52, R = 34, T = 26, B = 42;
-  const slot = Math.max(40, Math.min(64, 900 / months.length));
-  const W = L + R + slot * months.length, H = 300;
+  const slot = Math.max(40, Math.min(64, 640 / months.length));
+  const W = R + slot * months.length, H = 300;
   svg.setAttribute('width', W); svg.setAttribute('height', H + T + B);
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + (H + T + B));
+  axisSvg.setAttribute('width', L); axisSvg.setAttribute('height', H + T + B);
+  axisSvg.setAttribute('viewBox', '0 0 ' + L + ' ' + (H + T + B));
 
   const byMonth = months.map(m => {
     const mi = DATA.months.indexOf(m);
@@ -474,14 +499,15 @@ function chartMonths(rows) {
   const y = v => T + H - v / top * H;
 
   ticks.forEach(t => {
-    el('line', { x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: cssVar('--grid'), 'stroke-width': 1 }, svg);
-    el('text', { x: L - 8, y: y(t) + 4, 'text-anchor': 'end', class: 'tick' }, svg).textContent = fmt(t);
+    el('line', { x1: 0, x2: W - R, y1: y(t), y2: y(t), stroke: cssVar('--grid'), 'stroke-width': 1 }, svg);
+    el('text', { x: L - 8, y: y(t) + 4, 'text-anchor': 'end', class: 'tick' }, axisSvg).textContent = fmt(t);
   });
-  el('line', { x1: L, x2: W - R, y1: y(0), y2: y(0), stroke: cssVar('--axis'), 'stroke-width': 1 }, svg);
+  el('line', { x1: 0, x2: W - R, y1: y(0), y2: y(0), stroke: cssVar('--axis'), 'stroke-width': 1 }, svg);
+  el('text', { x: 4, y: 12, class: 'tick' }, axisSvg).textContent = 'часов';
 
   const bw = Math.min(24, slot - 12);
   byMonth.forEach((d, i) => {
-    const x = L + slot * i + (slot - bw) / 2;
+    const x = slot * i + (slot - bw) / 2;
     let acc = 0;
     d.cats.forEach((v, ci) => {
       if (v <= 0) return;
@@ -498,21 +524,92 @@ function chartMonths(rows) {
     }
     // месяц на каждой колонке, год — только там, где он меняется: иначе «сен 24» слипаются
     el('text', { x: x + bw / 2, y: T + H + 16, 'text-anchor': 'middle', class: 'tick' }, svg)
-      .textContent = MONTH_RU[+d.m.slice(5, 7) - 1];
+      .textContent = MONTH_RU[+d.m.slice(5, 7) - 1] + (d.m === PARTIAL ? '*' : '');
     if (i === 0 || d.m.slice(0, 4) !== byMonth[i - 1].m.slice(0, 4)) {
       el('text', { x: x + bw / 2, y: T + H + 30, 'text-anchor': 'middle', class: 'tick' }, svg)
         .textContent = d.m.slice(0, 4);
     }
-    const hit = el('rect', { x: L + slot * i, y: T, width: slot, height: H, class: 'hit' }, svg);
+    const hit = el('rect', { x: slot * i, y: T, width: slot, height: H, class: 'hit' }, svg);
     attach(hit, mLabel(d.m),
       DATA.categories.map((c, ci) => [c, fmt1(d.cats[ci]) + ' ч'])
         .concat([['Коммерческая загрузка', pct(d.bill.share)]]));
   });
-  el('text', { x: L, y: 12, class: 'tick' }, svg).textContent = 'часов';
+  // График шире контейнера — прокручиваем к последним месяцам: они интереснее первых
+  const box = svg.parentElement;
+  requestAnimationFrame(() => { box.scrollLeft = box.scrollWidth; });
 
+  // итоговая строка = то, что показывает кольцо: значения доступны и без наведения
+  const periodCats = DATA.categories.map((_, ci) => sum(rows.filter(r => r[3] === ci)));
+  const periodBill = billable(rows);
   tableFrom('t-months', ['Месяц'].concat(DATA.categories, ['Всего', '% комм.']),
     byMonth.map(d => [mLabel(d.m)].concat(d.cats.map(fmt1),
-      [fmt1(d.cats.reduce((a, b) => a + b, 0)), pct(d.bill.share)])));
+      [fmt1(d.cats.reduce((a, b) => a + b, 0)), pct(d.bill.share)])),
+    ['За период'].concat(periodCats.map(fmt1),
+      [fmt1(periodCats.reduce((a, b) => a + b, 0)), pct(periodBill.share)]));
+}
+
+/* ── 1а. Та же структура, но за весь период — кольцо ───────────── */
+// Сегмент кольца. Разрыв между долями делается сужением дуги на 2px по средней
+// окружности — тем же приёмом, что и зазор между сегментами столбиков.
+function ringArc(cx, cy, rOuter, rInner, a0, a1, gapPx) {
+  const rMid = (rOuter + rInner) / 2;
+  const gap = Math.min(gapPx / rMid / 2, (a1 - a0) / 2.2);
+  const s = a0 + gap, e = a1 - gap;
+  if (e <= s) return null;
+  const large = e - s > Math.PI ? 1 : 0;
+  const p = (r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  const [x1, y1] = p(rOuter, s), [x2, y2] = p(rOuter, e);
+  const [x3, y3] = p(rInner, e), [x4, y4] = p(rInner, s);
+  return 'M' + x1 + ' ' + y1 +
+    'A' + rOuter + ' ' + rOuter + ' 0 ' + large + ' 1 ' + x2 + ' ' + y2 +
+    'L' + x3 + ' ' + y3 +
+    'A' + rInner + ' ' + rInner + ' 0 ' + large + ' 0 ' + x4 + ' ' + y4 + 'Z';
+}
+
+function chartDonut(rows) {
+  const svg = clear(document.getElementById('c-donut'));
+  const size = 230, cx = size / 2, cy = size / 2, rOuter = 104, rInner = 66;
+  svg.setAttribute('width', size); svg.setAttribute('height', size);
+  svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
+
+  const values = DATA.categories.map((_, ci) => sum(rows.filter(r => r[3] === ci)));
+  const total = values.reduce((a, b) => a + b, 0);
+  const months = activeMonths(rows);
+  document.getElementById('donut-cap').textContent = total > 0
+    ? 'весь выбранный период, ' + months.length + ' мес.'
+    : 'нет данных за выбранный период';
+  if (total <= 0) return;
+
+  let angle = -Math.PI / 2;  // старт сверху
+  values.forEach((v, ci) => {
+    if (v <= 0) return;
+    const span = v / total * Math.PI * 2;
+    const d = ringArc(cx, cy, rOuter, rInner, angle, angle + span, 2);
+    const share = v / total * 100;
+    if (d) {
+      const fill = cssVar(CAT_VARS[ci]);
+      const path = el('path', { d: d, fill: fill }, svg);
+      attach(path, DATA.categories[ci],
+        [['Часы', fmt1(v) + ' ч'], ['Доля', pct(share)]]);
+      // подпись внутри доли — только если сектор её вмещает
+      if (share >= 7) {
+        const mid = angle + span / 2, rMid = (rOuter + rInner) / 2;
+        el('text', {
+          x: cx + rMid * Math.cos(mid), y: cy + rMid * Math.sin(mid) + 4,
+          'text-anchor': 'middle',
+          style: 'font-size:12px;font-weight:600;fill:' + inkOn(fill)
+        }, svg).textContent = Math.round(share) + '%';
+      }
+    }
+    angle += span;
+  });
+
+  el('text', {
+    x: cx, y: cy - 2, 'text-anchor': 'middle',
+    style: 'font-size:24px;font-weight:650;fill:var(--text-primary)'
+  }, svg).textContent = fmt(total);
+  el('text', { x: cx, y: cy + 16, 'text-anchor': 'middle', class: 'tick' }, svg)
+    .textContent = 'часов всего';
 }
 
 /* ── 1б. План и факт коммерческих часов ────────────────────────── */
@@ -856,12 +953,13 @@ function chartMacro(rows) {
 }
 
 /* ── Таблицы-двойники ──────────────────────────────────────────── */
-function tableFrom(id, head, rows) {
+function tableFrom(id, head, rows, totalRow) {
+  const cells = r => r.map((c, i) => '<td' + (i === 0 ? ' class="name"' : '') + '>' + c + '</td>').join('');
   const host = document.getElementById(id);
   host.innerHTML = '<table><thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') +
     '</tr></thead><tbody>' +
-    rows.map(r => '<tr>' + r.map((c, i) =>
-      '<td' + (i === 0 ? ' class="name"' : '') + '>' + c + '</td>').join('') + '</tr>').join('') +
+    rows.map(r => '<tr>' + cells(r) + '</tr>').join('') +
+    (totalRow ? '<tr class="total">' + cells(totalRow) + '</tr>' : '') +
     '</tbody></table>';
 }
 document.querySelectorAll('[data-table]').forEach(btn => {
@@ -923,6 +1021,7 @@ function render() {
   catLegend(document.getElementById('lg-cat2'));
   kpis(rows);
   chartMonths(rows);
+  chartDonut(rows);
   chartPlan(rows);
   chartPeople(rows);
   chartMatrix(rows);
