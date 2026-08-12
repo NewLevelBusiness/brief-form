@@ -5,24 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NLB — Цепочка создания ценности: проект разработки дашбордов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;700&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #13131c;
-    --surface2: #1c1c2e;
-    --border: rgba(255,255,255,0.07);
-    --accent: #7c5cfc;
-    --accent2: #c45cfc;
-    --accent-soft: rgba(124,92,252,0.15);
-    --text: #f0eeff;
-    --muted: #8888aa;
-    --green: #3dffc0;
-    --green-soft: rgba(61,255,192,0.12);
-    --amber: #ffc65c;
-    --amber-soft: rgba(255,198,92,0.12);
-    --error: #ff5c8a;
-    --error-soft: rgba(255,92,138,0.1);
+    --bg: #131f74;
+    --bg-deep: #0d1656;
+    --panel: #182687;
+    --surface: rgba(255,255,255,0.07);
+    --surface2: rgba(255,255,255,0.13);
+    --border: rgba(255,255,255,0.17);
+    --accent: #3d84ff;
+    --accent2: #7b8cff;
+    --accent-soft: rgba(61,132,255,0.18);
+    --text: #ffffff;
+    --muted: #b3bde9;
+    --green: #57c8ff;
+    --green-soft: rgba(87,200,255,0.15);
+    --amber: #ffb454;
+    --amber-soft: rgba(255,180,84,0.14);
+    --error: #ff7a8f;
+    --error-soft: rgba(255,122,143,0.12);
     --radius: 16px;
     --radius-sm: 10px;
   }
@@ -30,7 +32,7 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: var(--bg);
+    background: var(--bg-deep);
     color: var(--text);
     font-family: 'Golos Text', sans-serif;
     min-height: 100vh;
@@ -43,8 +45,9 @@
     position: fixed;
     inset: 0;
     background:
-      radial-gradient(ellipse 80% 50% at 10% 10%, rgba(124,92,252,0.12) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 90% 70%, rgba(196,92,252,0.09) 0%, transparent 60%);
+      linear-gradient(155deg, #0d1656 0%, #16237e 48%, #1c2f9e 100%),
+      radial-gradient(ellipse 70% 50% at 85% 8%, rgba(61,132,255,0.35) 0%, transparent 62%);
+    background-blend-mode: normal, screen;
     pointer-events: none;
     z-index: 0;
   }
@@ -64,24 +67,25 @@
     gap: 12px;
     margin-bottom: 44px;
   }
-  .brand-icon {
-    width: 36px; height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
+  .brand-mark { flex-shrink: 0; }
   .brand-name {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 13px;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    color: var(--muted);
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.75);
     text-transform: uppercase;
+  }
+  .h1-rule {
+    width: 132px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 3px;
+    margin: 4px 0 22px;
   }
 
   .eyebrow {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.15em;
@@ -90,7 +94,7 @@
     margin-bottom: 12px;
   }
   h1 {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: clamp(26px, 4.5vw, 40px);
     font-weight: 700;
     line-height: 1.18;
@@ -118,7 +122,7 @@
   .source b { color: var(--text); font-weight: 600; }
 
   h2 {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: clamp(18px, 2.6vw, 24px);
     font-weight: 700;
     margin-bottom: 10px;
@@ -160,7 +164,7 @@
   }
   .strip-item:last-child::after { content: ''; }
   .strip-k {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 9px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -177,8 +181,8 @@
 
   /* Loop banner */
   .loop {
-    background: linear-gradient(90deg, rgba(124,92,252,0.12), rgba(196,92,252,0.06));
-    border: 1.5px solid rgba(124,92,252,0.35);
+    background: linear-gradient(90deg, rgba(61,132,255,0.22), rgba(123,140,255,0.08));
+    border: 1.5px solid rgba(61,132,255,0.45);
     border-radius: var(--radius);
     padding: 22px 24px;
     display: flex;
@@ -187,7 +191,7 @@
     flex-wrap: wrap;
   }
   .loop-badge {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.1em;
@@ -200,7 +204,7 @@
   }
   .loop-body { flex: 1; min-width: 260px; }
   .loop-body h3 {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 15px;
     font-weight: 600;
     margin-bottom: 6px;
@@ -231,7 +235,7 @@
     flex-wrap: wrap;
   }
   .contour-key {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.12em;
@@ -239,7 +243,7 @@
     color: var(--accent);
   }
   .contour-title {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 17px;
     font-weight: 600;
   }
@@ -262,7 +266,7 @@
     flex-wrap: wrap;
   }
   .link-num {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 13px;
     font-weight: 700;
     color: var(--accent);
@@ -287,7 +291,7 @@
     font-size: 12px;
     color: var(--green);
     background: var(--green-soft);
-    border: 1px solid rgba(61,255,192,0.3);
+    border: 1px solid rgba(87,200,255,0.45);
     border-radius: 99px;
     padding: 4px 12px;
     white-space: nowrap;
@@ -306,7 +310,7 @@
     padding: 14px 16px;
   }
   .cell-k {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 9px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -341,7 +345,7 @@
     flex-wrap: wrap;
   }
   .value-k {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 9px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -354,7 +358,7 @@
     margin-top: 12px;
     font-size: 13px;
     color: var(--muted);
-    background: var(--surface2);
+    background: rgba(255,180,84,0.09);
     border-left: 2px solid var(--amber);
     border-radius: 0 8px 8px 0;
     padding: 9px 14px;
@@ -372,7 +376,7 @@
     vertical-align: top;
   }
   th {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -430,33 +434,33 @@
   .diagram-wrap {
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     padding: 8px;
     overflow-x: auto;
     margin-bottom: 16px;
   }
   .diagram-wrap svg { display: block; width: 100%; min-width: 1000px; height: auto; }
-  .d-band { fill: rgba(255,255,255,0.022); stroke: var(--border); stroke-width: 1; }
+  .d-band { fill: rgba(255,255,255,0.055); stroke: rgba(255,255,255,0.15); stroke-width: 1; }
   .d-label {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Golos Text', sans-serif;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.14em;
-    fill: var(--accent);
+    fill: #8fb3ff;
   }
-  .n { fill: #13131c; stroke: rgba(255,255,255,0.13); stroke-width: 1.4; }
-  .n.hot { stroke: rgba(196,92,252,0.7); }
-  .n.risk { stroke: rgba(255,198,92,0.65); }
-  .n-num { font-family: 'Unbounded', sans-serif; font-size: 12px; font-weight: 700; fill: var(--accent); }
+  .n { fill: #202f9c; stroke: rgba(255,255,255,0.28); stroke-width: 1.4; }
+  .n.hot { fill: #2c3cb6; stroke: #9aa6ff; stroke-width: 2.2; }
+  .n.risk { stroke: #ffb454; stroke-width: 2.2; }
+  .n-num { font-family: 'Golos Text', sans-serif; font-size: 12px; font-weight: 700; fill: #8fb3ff; }
   .n-t { font-family: 'Golos Text', sans-serif; font-size: 13.5px; font-weight: 600; fill: var(--text); }
   .n-o { font-family: 'Golos Text', sans-serif; font-size: 10.5px; fill: var(--muted); }
-  .wire { stroke: var(--accent); stroke-width: 1.7; fill: none; }
-  .wire-wrap { stroke: rgba(124,92,252,0.55); stroke-width: 1.7; fill: none; }
-  .wire-fb { stroke: var(--green); stroke-width: 1.7; fill: none; stroke-dasharray: 7 6; }
-  .encl { stroke: rgba(124,92,252,0.42); stroke-width: 1.4; stroke-dasharray: 9 7; fill: none; }
-  .encl-t { font-family: 'Unbounded', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; fill: var(--accent); }
-  .fb-t { font-family: 'Unbounded', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; fill: var(--green); }
-  .gate { fill: var(--bg); stroke: var(--amber); stroke-width: 1.3; }
+  .wire { stroke: #4d8dff; stroke-width: 1.7; fill: none; }
+  .wire-wrap { stroke: rgba(77,141,255,0.7); stroke-width: 1.7; fill: none; }
+  .wire-fb { stroke: #57c8ff; stroke-width: 1.7; fill: none; stroke-dasharray: 7 6; }
+  .encl { stroke: rgba(255,255,255,0.32); stroke-width: 1.4; stroke-dasharray: 9 7; fill: none; }
+  .encl-t { font-family: 'Golos Text', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; fill: #a9c4ff; }
+  .fb-t { font-family: 'Golos Text', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; fill: #57c8ff; }
+  .gate { fill: #182687; stroke: var(--amber); stroke-width: 1.4; }
   .dia-legend {
     display: flex;
     flex-wrap: wrap;
@@ -473,7 +477,7 @@
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: rgba(124,92,252,0.3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -481,12 +485,17 @@
 <div class="container">
 
   <div class="brand">
-    <div class="brand-icon">◈</div>
-    <div class="brand-name">NLB Analytics · Стандарты</div>
+    <svg class="brand-mark" width="62" height="46" viewBox="0 0 62 46" aria-label="New Level Business">
+      <path d="M2 44 V2 H60 V44 H44" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="square"/>
+      <text x="11" y="21" fill="#fff" font-family="'Golos Text',sans-serif" font-size="13.5" font-weight="700" letter-spacing="0.5">NEW</text>
+      <text x="11" y="37" fill="#fff" font-family="'Golos Text',sans-serif" font-size="13.5" font-weight="700" letter-spacing="0.5">LEVE</text>
+    </svg>
+    <div class="brand-name">New Level Business · Стандарты</div>
   </div>
 
   <div class="eyebrow">Стандарт ведения проектов → процессная модель</div>
   <h1>Цепочка создания ценности<br>проекта разработки дашбордов</h1>
+  <div class="h1-rule"></div>
   <p class="lead">
     Стандарт НЛБ развёрнут в сквозную цепочку: где входит запрос клиента, что с ним происходит на каждом
     переделе, каким артефактом закрывается звено и какая ценность прирастает. Управление проектом показано
@@ -538,16 +547,16 @@
       <svg viewBox="0 0 1280 1100" role="img" aria-label="Блок-схема цепочки создания ценности проекта разработки дашбордов">
         <defs>
           <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c5cfc"/>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#4d8dff"/>
           </marker>
           <marker id="ah-fb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#3dffc0"/>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#57c8ff"/>
           </marker>
         </defs>
 
         <!-- Enclosure: этап 0 -->
         <rect class="encl" x="16" y="44" width="1248" height="1036" rx="20"/>
-        <rect x="44" y="34" width="726" height="20" fill="#13131c"/>
+        <rect x="44" y="34" width="726" height="20" fill="#182687"/>
         <text class="encl-t" x="56" y="49">ЭТАП 0 · ЕЖЕДНЕВНЫЙ КОНТУР УПРАВЛЕНИЯ · ТРЕКЕР ЗАДАЧ, ПЛАН/ФАКТ ПО ЧАСАМ, ВСТРЕЧИ, СПРАВКА РУКОВОДСТВУ</text>
 
         <!-- ================= BAND A ================= -->
@@ -655,7 +664,7 @@
 
         <g>
           <rect class="n risk" x="66" y="700" width="230" height="90" rx="12"/>
-          <circle cx="280" cy="720" r="4" fill="#ffc65c"/>
+          <circle cx="280" cy="720" r="4" fill="#ffb454"/>
           <text class="n-num" x="82" y="724">10А</text>
           <text class="n-t" x="82" y="747">Организация</text>
           <text class="n-t" x="82" y="764">доступа к данным</text>
@@ -663,7 +672,7 @@
         </g>
         <g>
           <rect class="n hot" x="344" y="700" width="230" height="90" rx="12"/>
-          <circle cx="558" cy="720" r="4" fill="#c45cfc"/>
+          <circle cx="558" cy="720" r="4" fill="#7b8cff"/>
           <text class="n-num" x="360" y="724">10Б</text>
           <text class="n-t" x="360" y="747">Аудит данных</text>
           <text class="n-t" x="360" y="764">и метрик</text>
