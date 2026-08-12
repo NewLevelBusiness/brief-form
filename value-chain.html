@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLB — Цепочка создания ценности: проект разработки дашбордов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;700&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131c;
+    --surface2: #1c1c2e;
+    --border: rgba(255,255,255,0.07);
+    --accent: #7c5cfc;
+    --accent2: #c45cfc;
+    --accent-soft: rgba(124,92,252,0.15);
+    --text: #f0eeff;
+    --muted: #8888aa;
+    --green: #3dffc0;
+    --green-soft: rgba(61,255,192,0.12);
+    --amber: #ffc65c;
+    --amber-soft: rgba(255,198,92,0.12);
+    --error: #ff5c8a;
+    --error-soft: rgba(255,92,138,0.1);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Golos Text', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 10% 10%, rgba(124,92,252,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 70%, rgba(196,92,252,0.09) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 24px 100px;
+  }
+
+  /* Header */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 44px;
+  }
+  .brand-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .brand-name {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .eyebrow {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(26px, 4.5vw, 40px);
+    font-weight: 700;
+    line-height: 1.18;
+    margin-bottom: 14px;
+  }
+  .lead {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 720px;
+    margin-bottom: 20px;
+  }
+  .source {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 56px;
+  }
+  .source b { color: var(--text); font-weight: 600; }
+
+  h2 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(18px, 2.6vw, 24px);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  h2 .num {
+    color: var(--accent);
+    margin-right: 10px;
+  }
+  .section { margin-bottom: 68px; }
+  .section-sub {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    max-width: 760px;
+  }
+
+  /* Contour strip */
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .strip-item {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 14px;
+    position: relative;
+  }
+  .strip-item::after {
+    content: '→';
+    position: absolute;
+    right: -12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-size: 15px;
+    z-index: 2;
+  }
+  .strip-item:last-child::after { content: ''; }
+  .strip-k {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .strip-t { font-size: 14px; font-weight: 600; line-height: 1.3; margin-bottom: 6px; }
+  .strip-d { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  @media (max-width: 860px) {
+    .strip { grid-template-columns: 1fr 1fr; }
+    .strip-item::after { content: ''; }
+  }
+  @media (max-width: 520px) { .strip { grid-template-columns: 1fr; } }
+
+  /* Loop banner */
+  .loop {
+    background: linear-gradient(90deg, rgba(124,92,252,0.12), rgba(196,92,252,0.06));
+    border: 1.5px solid rgba(124,92,252,0.35);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .loop-badge {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 99px;
+    padding: 6px 14px;
+    white-space: nowrap;
+  }
+  .loop-body { flex: 1; min-width: 260px; }
+  .loop-body h3 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .loop-body p { font-size: 14px; color: var(--muted); }
+  .loop-list {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 14px;
+  }
+  .pill {
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 99px;
+    padding: 5px 13px;
+    color: var(--muted);
+  }
+
+  /* Contour block */
+  .contour { margin-bottom: 40px; }
+  .contour-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .contour-key {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .contour-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .contour-meta { font-size: 13px; color: var(--muted); margin-left: auto; }
+
+  /* Link card */
+  .link {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .link-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .link-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 8px;
+    min-width: 38px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0 8px;
+  }
+  .link-title {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+    flex: 1;
+    min-width: 200px;
+  }
+  .owner {
+    font-size: 12px;
+    color: var(--green);
+    background: var(--green-soft);
+    border: 1px solid rgba(61,255,192,0.3);
+    border-radius: 99px;
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+  .flow {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 780px) { .flow { grid-template-columns: 1fr; } }
+  .cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+  }
+  .cell-k {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .cell ul { list-style: none; }
+  .cell li {
+    font-size: 13.5px;
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+    margin-bottom: 5px;
+  }
+  .cell li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 9px;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .cell.out li::before { background: var(--green); }
+  .cell li:last-child { margin-bottom: 0; }
+
+  .value {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    border-top: 1px dashed var(--border);
+    padding-top: 14px;
+    flex-wrap: wrap;
+  }
+  .value-k {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    padding-top: 3px;
+    white-space: nowrap;
+  }
+  .value-t { font-size: 14px; flex: 1; min-width: 240px; }
+  .gate {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--surface2);
+    border-left: 2px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    padding: 9px 14px;
+  }
+  .gate b { color: var(--amber); font-weight: 600; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; background: var(--surface); }
+  th, td {
+    text-align: left;
+    padding: 13px 16px;
+    font-size: 13.5px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    background: var(--surface2);
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.c { text-align: center; font-weight: 600; }
+  .r-o { color: var(--green); }
+  .r-u { color: var(--amber); }
+  .r-s { color: var(--accent); }
+  .r-i { color: var(--muted); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px; font-size: 12.5px; color: var(--muted); }
+
+  /* Gap cards */
+  .gaps { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 780px) { .gaps { grid-template-columns: 1fr; } }
+  .gap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--error);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+  }
+  .gap.warn { border-left-color: var(--amber); }
+  .gap-h {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .gap-h span { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .gap p { font-size: 13px; color: var(--muted); }
+  .gap p b { color: var(--text); font-weight: 600; }
+
+  footer {
+    margin-top: 20px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: rgba(124,92,252,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="brand">
+    <div class="brand-icon">◈</div>
+    <div class="brand-name">NLB Analytics · Стандарты</div>
+  </div>
+
+  <div class="eyebrow">Стандарт ведения проектов → процессная модель</div>
+  <h1>Цепочка создания ценности<br>проекта разработки дашбордов</h1>
+  <p class="lead">
+    Стандарт НЛБ развёрнут в сквозную цепочку: где входит запрос клиента, что с ним происходит на каждом
+    переделе, каким артефактом закрывается звено и какая ценность прирастает. Управление проектом показано
+    не как отдельный этап, а как сквозной контур, удерживающий цепочку.
+  </p>
+  <div class="source">
+    <span><b>Источник:</b> «Стандарт ведения проекта_10.04.26» (NLB Analytics)</span>
+    <span><b>Состав:</b> 13 этапов + ежедневный статус + RACI</span>
+    <span><b>Продукт:</b> BI-дашборды на данных клиента</span>
+  </div>
+
+  <!-- 1. Общая схема -->
+  <div class="section">
+    <h2><span class="num">01</span>Контуры цепочки</h2>
+    <p class="section-sub">
+      Пять переделов от рынка до капитализации опыта. Цепочка замкнута: упакованный кейс возвращается
+      в лидогенерацию и питает следующий цикл.
+    </p>
+
+    <div class="strip">
+      <div class="strip-item">
+        <div class="strip-k">Контур A · этапы 1–3</div>
+        <div class="strip-t">Спрос и сделка</div>
+        <div class="strip-d">Лид → снятый запрос → КП. Превращаем боль клиента в оценённый объём работ.</div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-k">Контур B · этапы 4–6</div>
+        <div class="strip-t">Мобилизация</div>
+        <div class="strip-d">Договор, NDA, счёт, контрактование, команда, доступы и софт.</div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-k">Контур C · этапы 7–9</div>
+        <div class="strip-t">Управляемость</div>
+        <div class="strip-d">Каналы связи, системные встречи, протоколы, ТЗ, оценка часов и сроков.</div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-k">Контур D · этапы 10–11</div>
+        <div class="strip-t">Производство</div>
+        <div class="strip-d">Доступ к данным → аудит → разработка → тест → эксплуатация → сдача.</div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-k">Контур E · этапы 12–13</div>
+        <div class="strip-t">Закрытие и капитал</div>
+        <div class="strip-d">Юридическое закрытие, оплата, упаковка кейса в актив компании.</div>
+      </div>
+    </div>
+
+    <div class="loop">
+      <div class="loop-badge">Этап 0 · сквозной</div>
+      <div class="loop-body">
+        <h3>Ежедневный управляющий цикл</h3>
+        <p>
+          Руководитель проекта каждое утро формирует справку по своим проектам. Это не отдельное звено
+          цепочки, а контур обратной связи: он снимает состояние со всех переделов сразу и не даёт
+          отклонению по срокам или трудозатратам дойти до приёмки незамеченным.
+        </p>
+        <div class="loop-list">
+          <span class="pill">Трекер задач актуализирован</span>
+          <span class="pill">План/факт по часам за неделю</span>
+          <span class="pill">Внутренние и внешние встречи запланированы</span>
+          <span class="pill">Доп. вопросы зафиксированы и переданы</span>
+          <span class="pill">Справка направлена руководству</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Звенья -->
+  <div class="section">
+    <h2><span class="num">02</span>Звенья цепочки</h2>
+    <p class="section-sub">
+      Для каждого звена: что поступает на вход, что делаем, каким артефактом закрываем, кто владелец,
+      какая ценность прирастает и по какому условию открываются ворота на следующий передел.
+    </p>
+
+    <!-- CONTOUR A -->
+    <div class="contour">
+      <div class="contour-head">
+        <span class="contour-key">Контур A</span>
+        <span class="contour-title">Спрос и сделка</span>
+        <span class="contour-meta">Этапы 1–3 · владение: ГД и Руководитель проекта</span>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">1</span>
+          <span class="link-title">Лидогенерация и продажи</span>
+          <span class="owner">ГД + маркетинг</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Рынок: растущие компании от 3 млрд ₽ оборота</li>
+              <li>Частично реализованная цифровизация</li>
+              <li>Упакованные кейсы предыдущих проектов</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Агентский канал — комиссия 5–10% от контракта</li>
+              <li>Партнёрский канал — ИТ-компании-внедренцы (не развит)</li>
+              <li>Прямой канал — соцсети, конференции, бизнес-школа, SEO</li>
+              <li>Отнесение запроса к одному из 5 типовых</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Квалифицированный лид в CRM</li>
+              <li>Зафиксированный канал привлечения</li>
+              <li>Договорённость о встрече или брифе</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Из недифференцированного рынка выделен клиент, у которого запрос на data-driven управление
+            уже созрел, — стоимость последующих переделов не тратится вхолостую.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> лид соответствует профилю приоритетного клиента и внесён в систему учёта.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">2</span>
+          <span class="link-title">Снятие запроса с клиента и квалификация</span>
+          <span class="owner">Рук. проекта + Рук. разработки + ГД</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Квалифицированный лид</li>
+              <li>Доступ к ЛПР и к ИТ-команде клиента</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Вариант 1: минимум 2 встречи — с ЛПР (боли и проблемы) и с ИТ (текущая инфраструктура, ИС, ожидания)</li>
+              <li>Вариант 2: заполнение <a href="https://newlevelbusiness.github.io/brief-form/">брифа по шаблону</a></li>
+              <li>Верификация нагрузки Руководителем по разработке</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Заполненная таблица снятия запроса по стандарту</li>
+              <li>Пресейл-папка на корпоративном диске: видео, транскрибации, материалы клиента</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Разговорная боль переведена в структурированное описание задачи, пригодное для оценки
+            трудозатрат. Здесь впервые появляется предмет проекта.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> таблица передана Руководителю по разработке, целесообразность продолжения подтверждена.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">3</span>
+          <span class="link-title">План работ и коммерческое предложение</span>
+          <span class="owner">Рук. проекта + Рук. разработки + Админ.</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Снятый и верифицированный запрос</li>
+              <li>Продуктовая презентация и шаблон КП</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Определение позиционного состава команды под объём задач</li>
+              <li>КП: объединённое с презентацией — если презентация не отправлялась ранее; отдельное — если отправлялась</li>
+              <li>Согласование с ГД до отправки клиенту</li>
+              <li>Согласование порядка взаиморасчётов (ГД ↔ клиент)</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>PDF «Дашбордирование для [Клиент] [Дата]»</li>
+              <li>Состав команды, внесённый в стандарт</li>
+              <li>Согласованная схема взаиморасчётов</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Задача получила цену, срок и ресурсную модель. Ценность для клиента — предсказуемость;
+            для НЛБ — управляемая маржинальность до начала расходов.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> КП направлено клиенту, согласовано с ГД, взаиморасчёты приняты.</div>
+      </div>
+    </div>
+
+    <!-- CONTOUR B -->
+    <div class="contour">
+      <div class="contour-head">
+        <span class="contour-key">Контур B</span>
+        <span class="contour-title">Мобилизация</span>
+        <span class="contour-meta">Этапы 4–6 · владение: Администратор проекта</span>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">4</span>
+          <span class="link-title">Договор, NDA и счёт</span>
+          <span class="owner">Администратор проекта</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Принятое клиентом КП</li>
+              <li>Стандартные шаблоны договора и счёта</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>NDA до старта работ — форма НЛБ или форма клиента</li>
+              <li>Договор по стандартному шаблону</li>
+              <li>Счёт по шаблону, документы в ЭДО</li>
+              <li>Контроль подписания и поступления оплаты</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Подписанные NDA и договор</li>
+              <li>Счёт в ЭДО, полученная оплата или согласованный график</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Обязательства сторон и режим конфиденциальности закреплены юридически — производственный
+            контур можно запускать, не принимая на себя неоформленный риск.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> NDA и договор подписаны, оплата получена или график платежей согласован.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">5</span>
+          <span class="link-title">Контрактование внешних исполнителей</span>
+          <span class="owner">Админ. проекта + Рук. проекта</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Позиционный состав команды из КП</li>
+              <li>Актуальная форма NDA</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>NDA со всей командой реализации</li>
+              <li>Договор возмездного оказания услуг с ежемесячной пролонгацией — для почасовых подрядчиков и кандидатов на испытательном сроке</li>
+              <li>Настройка учёта отработанных часов (план/факт)</li>
+              <li>График и контроль выплат исполнителям</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Пакет NDA и договоров ВОУ</li>
+              <li>Работающий почасовой план/факт</li>
+              <li>График выплат</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Переменная часть себестоимости становится измеримой и контролируемой в часах, а данные
+            клиента защищены на всей глубине подряда, включая внешних аналитиков.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> NDA подписаны всеми участниками, план/факт по часам запущен, документы в папке проекта.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">6</span>
+          <span class="link-title">Команда и производственная инфраструктура</span>
+          <span class="owner">Админ. проекта + Рук. проекта</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Законтрактованная команда</li>
+              <li>Готовность ИТ-команды клиента выдать доступы</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Фиксация ролей: администратор, бизнес-консультант, рук. разработки, инженер данных, ИТ/1С, рук. проекта, BI-аналитики</li>
+              <li>Организация доступов: удалённый Windows-сервер, базы данных, личные кабинеты ИС (1С, Битрикс и др.)</li>
+              <li>Установка софта: Power BI Report Server, Excel, SSMS, 1С/Битрикс, браузер</li>
+              <li>Разделение контроля: РР — корректность реализации, РП — соответствие целям клиента</li>
+              <li>Контроль утилизации рабочего времени штатных сотрудников</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Рабочие места с проверенными доступами</li>
+              <li>Функционирующий софт</li>
+              <li>Оценка сроков и трудозатрат на разработку</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Команда переходит из состояния «назначена» в состояние «способна производить»: до этой точки
+            любой час аналитика — потери.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> доступы проверены, софт работает, трудозатраты поставлены на контроль.</div>
+      </div>
+    </div>
+
+    <!-- CONTOUR C -->
+    <div class="contour">
+      <div class="contour-head">
+        <span class="contour-key">Контур C</span>
+        <span class="contour-title">Управляемость проекта</span>
+        <span class="contour-meta">Этапы 7–9 · владение: Руководитель проекта</span>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">7</span>
+          <span class="link-title">Режим коммуникации с клиентом</span>
+          <span class="owner">Админ. проекта + Рук. проекта</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Состав команды и контакты клиента</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Внутренний чат: <b>Внутр_НАИМЕНОВАНИЕ КЛИЕНТА</b></li>
+              <li>Чат с клиентом: <b>НАИМЕНОВАНИЕ КЛИЕНТА / НЛБ</b></li>
+              <li>Стратегические встречи с собственником — 1 раз в 2–3 месяца с презентацией</li>
+              <li>Определение каналов эскалации</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Два рабочих чата по стандарту наименования</li>
+              <li>Календарь стратегических встреч</li>
+              <li>Доведённый до всех регламент коммуникации</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Разделение внутреннего и клиентского контуров: команда обсуждает черновое у себя, клиент
+            получает выверенное. Ожидания заказчика управляются, а не догоняются.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> оба чата созданы, участники добавлены, стратегические встречи в календаре.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">8</span>
+          <span class="link-title">Системные встречи и статус по проекту</span>
+          <span class="owner">Рук. проекта + Админ. проекта</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Согласованный с клиентом день и время</li>
+              <li>Данные ежедневного статуса и трекера задач</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Слоты запрашивает Администратор, встречи в календаре, онлайн (Zoom)</li>
+              <li>Подготовка, проведение и фиксация договорённостей — Руководитель проекта</li>
+              <li>Протокол: задачи, ответственные, сроки — сначала во внутренний чат, после правок дублируется клиенту</li>
+              <li>Презентация-статус: цели, этапы, задачи, отчёт о работе, вопросы и решения по визуалам (оформление — дизайнер)</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Протокол каждой встречи в обоих чатах</li>
+              <li>Актуальная презентация-статус, закреплённая в чатах</li>
+              <li>Договорённости, внесённые в трекер задач</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Каждая договорённость становится задачей с ответственным и сроком. Это единственное место
+            цепочки, где устная воля клиента конвертируется в управляемый объём работ.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> протокол опубликован, задачи в трекере, презентация-статус обновлена.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">9</span>
+          <span class="link-title">ТЗ, оценка трудозатрат и запрос доступов</span>
+          <span class="owner">Рук. проекта + Рук. разработки</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Снятый запрос и договорённости системных встреч</li>
+              <li>Сведения об ИТ-ландшафте клиента</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>РП разрабатывает ТЗ, РР отвечает за технические требования</li>
+              <li>Команда оценивает трудозатраты в часах и сроки реализации ТЗ</li>
+              <li>Встреча с ИТ-командой клиента для анализа ситуации</li>
+              <li>РР передаёт РП перечень источников данных, РП запрашивает доступы</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Согласованное ТЗ на разработку</li>
+              <li>Оценка в часах и календарные сроки</li>
+              <li>Перечень источников и направленный запрос на доступы</li>
+              <li>Согласованные контрольные точки качества</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Объём работ зафиксирован и посчитан. Отсюда и до сдачи любое расширение запроса — предмет
+            отдельного решения, а не молчаливого роста себестоимости.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> ТЗ согласовано, часы и сроки оценены, запрос на доступы направлен клиенту.</div>
+      </div>
+    </div>
+
+    <!-- CONTOUR D -->
+    <div class="contour">
+      <div class="contour-head">
+        <span class="contour-key">Контур D</span>
+        <span class="contour-title">Производство</span>
+        <span class="contour-meta">Этапы 10–11 · владение: Руководитель по разработке</span>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">10А</span>
+          <span class="link-title">Организация доступа к данным</span>
+          <span class="owner">Рук. разработки + Инженер данных</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Перечень источников данных</li>
+              <li>Готовность ИТ-инфраструктуры клиента</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Сбор и консолидация данных, требования к интеграции из разных ИС</li>
+              <li>Есть хаб данных: доступ уровня администратора для РР и аналитиков</li>
+              <li>Нет хранилища: 2 онлайн-встречи — тех лид передаёт требования к серверу, клиент даёт IP и учётную запись, инженер данных разворачивает BI-сервер, настраивает версии и идентификацию</li>
+              <li>При необходимости ИТ клиента организует VPN</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Развёрнутый и функционирующий BI-сервер</li>
+              <li>Подключённые источники, настроенные обновления</li>
+              <li>Требования к серверу как документ</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Данные клиента впервые становятся физически доступны для обработки. Это узкое место всей
+            цепочки: задержка доступов останавливает производство целиком.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> доступ организован, BI-сервер работает, обновления настроены.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">10Б</span>
+          <span class="link-title">Аудит данных, методологии и метрик</span>
+          <span class="owner">Рук. проекта + Рук. разработки + Бизнес-консультант</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Доступ к источникам данных</li>
+              <li>Действующая система учёта клиента</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Определение источников, анализ качества и чистоты наполнения</li>
+              <li>Анализ AS IS: система учёта и методология расчёта метрик</li>
+              <li>Интервью с ключевыми позициями: функция, показатели успеха, текущие метрики и инструменты</li>
+              <li>Саммари по позициям: текущее состояние и необходимые корректировки</li>
+              <li>Проектирование целевых метрик («паучки») и методологии расчёта</li>
+              <li>Предложения по формату визуализации</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Система целевых метрик с методологией расчёта</li>
+              <li>Реестр ошибок и недостающих данных в ИС</li>
+              <li>Каталог дашбордов (предложения по визуализации)</li>
+              <li>Презентация итогов аудита, согласованная заказчиком</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Главный интеллектуальный передел: сырые данные связываются с управленческими решениями через
+            дерево метрик. Здесь создаётся то, что клиент не может купить как коробочный продукт.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> методология и целевые метрики согласованы, реестр ошибок передан клиенту.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">10В</span>
+          <span class="link-title">Разработка моделей и BI-дашбордов</span>
+          <span class="owner">Рук. разработки + BI-аналитики</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Согласованные итоги аудита</li>
+              <li>Методология расчёта показателей</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Требования к целевой системе дашбордов</li>
+              <li>Оформление методологии (метрики и показатели)</li>
+              <li>ТЗ для интегратора на корректировки в ИС</li>
+              <li>Прототипирование и разработка визуалов под пользователей</li>
+              <li>Тестирование, доработка по итогам тестовой эксплуатации</li>
+              <li>Настройка прав доступа с ограничением на уровне данных</li>
+              <li>Передача в промышленную эксплуатацию: обновления и ролевая модель</li>
+              <li>Техдокументация, инструкции и видеоинструкции, обучение пользователей</li>
+              <li>Администрирование и техподдержка в гарантийный период</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Дашборды в промышленной эксплуатации</li>
+              <li>Внедрённая ролевая модель доступа</li>
+              <li>Техдокументация и видеоинструкции</li>
+              <li>Обученные пользователи</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Метрика превращается в ежедневный управленческий инструмент. Ценность фиксируется не в момент
+            сдачи дашборда, а в момент, когда пользователь умеет им пользоваться.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> дашборды протестированы и приняты, права настроены, обучение проведено.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">11</span>
+          <span class="link-title">Сдача работ клиенту</span>
+          <span class="owner">Рук. проекта + Рук. разработки</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Готовые дашборды</li>
+              <li>ТЗ и бренд-бук клиента</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Двойной контроль: Рук. разработки проверяет корректность расчётов, включая работу внешних аналитиков</li>
+              <li>Рук. проекта проверяет соответствие продукту: задачи, показатели, визуалы, функциональность, бренд-бук</li>
+              <li>Отработка замечаний клиента и повторная приёмка</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Подтверждённая приёмка клиентом</li>
+              <li>Подписанный акт сдачи-приёмки</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Два независимых контроля — технический и продуктовый — разводят «посчитано верно» и «решает
+            задачу клиента». Проект признаётся результатом, а не набором работ.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> замечания устранены, акт сдачи-приёмки подписан.</div>
+      </div>
+    </div>
+
+    <!-- CONTOUR E -->
+    <div class="contour">
+      <div class="contour-head">
+        <span class="contour-key">Контур E</span>
+        <span class="contour-title">Закрытие и капитализация</span>
+        <span class="contour-meta">Этапы 12–13 · владение: Администратор проекта, Маркетинг</span>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">12</span>
+          <span class="link-title">Юридическое закрытие и финансовые расчёты</span>
+          <span class="owner">Администратор проекта</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Подписанный акт сдачи-приёмки</li>
+              <li>Условия договора и план/факт часов исполнителей</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Подготовка и направление закрывающих документов</li>
+              <li>Подписание через ЭДО</li>
+              <li>Получение окончательной оплаты</li>
+              <li>Расчёты с внешними исполнителями</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Закрывающие документы в ЭДО</li>
+              <li>Полученная оплата и закрытые договоры подряда</li>
+              <li>Финансовое закрытие в учёте</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Созданная ценность конвертируется в реализованную маржу: до этого звена результат существует
+            только как обязательство.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> оплата получена, исполнители рассчитаны, факт зафиксирован в учёте.</div>
+      </div>
+
+      <div class="link">
+        <div class="link-head">
+          <span class="link-num">13</span>
+          <span class="link-title">Упаковка кейса</span>
+          <span class="owner">Маркетинг / Дизайн + Рук. проекта</span>
+        </div>
+        <div class="flow">
+          <div class="cell">
+            <div class="cell-k">Вход</div>
+            <ul>
+              <li>Сданный дашборд</li>
+              <li>Согласие клиента на публикацию</li>
+            </ul>
+          </div>
+          <div class="cell">
+            <div class="cell-k">Работа</div>
+            <ul>
+              <li>Скриншоты отчётов и запись видео функционала</li>
+              <li>Внесение дашборда в Каталог дашбордов</li>
+              <li>Публикация на сайте НЛБ</li>
+              <li>Монтаж видео для YouTube</li>
+              <li>Описание кейса совместно с Руководителем проекта</li>
+            </ul>
+          </div>
+          <div class="cell out">
+            <div class="cell-k">Выход · артефакт</div>
+            <ul>
+              <li>Кейс на сайте и в каталоге</li>
+              <li>Видео на YouTube</li>
+              <li>Переиспользуемый образец для следующих проектов</li>
+            </ul>
+          </div>
+        </div>
+        <div class="value">
+          <span class="value-k">Прирост ценности</span>
+          <span class="value-t">
+            Единичный проект превращается в актив компании: питает прямой канал продаж (звено 1) и
+            служит образцом визуалов при прототипировании (звено 10В). Цепочка замыкается.
+          </span>
+        </div>
+        <div class="gate"><b>Ворота →</b> кейс опубликован, материалы согласованы с клиентом, ретроспектива проведена и выводы зафиксированы.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Роль РП -->
+  <div class="section">
+    <h2><span class="num">03</span>Роль руководителя проекта по цепочке</h2>
+    <p class="section-sub">
+      По стандарту Руководитель проекта ведёт проект «от снятия запроса до сдачи». В цепочке это означает
+      участие во всех звеньях, но с разной функцией: владение результатом, техническое ведение
+      или контроль.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Звено</th>
+            <th>Функция РП</th>
+            <th>Что именно держит</th>
+            <th>Артефакт под ответственностью</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1. Лидогенерация</td><td class="r-s">Согласует</td><td>Оценка реализуемости запроса</td><td>—</td></tr>
+          <tr><td>2. Снятие запроса</td><td class="r-o">Владеет</td><td>Встречи с ЛПР и ИТ, квалификация</td><td>Таблица снятия запроса</td></tr>
+          <tr><td>3. Подготовка КП</td><td class="r-o">Владеет</td><td>Состав команды, оценка объёма</td><td>КП и план работ</td></tr>
+          <tr><td>4. Договор и счёт</td><td class="r-s">Согласует</td><td>Соответствие договора объёму работ</td><td>—</td></tr>
+          <tr><td>5. Контрактование</td><td class="r-o">Владеет</td><td>Договоры ВОУ, контроль часов подрядчиков</td><td>План/факт по часам</td></tr>
+          <tr><td>6. Команда и доступы</td><td class="r-o">Владеет</td><td>Оценка сроков, утилизация штатных сотрудников</td><td>Оценка трудозатрат</td></tr>
+          <tr><td>7. Коммуникации</td><td class="r-s">Согласует</td><td>Регламент и каналы эскалации</td><td>—</td></tr>
+          <tr><td>8. Системные встречи</td><td class="r-o">Владеет</td><td>Подготовка, проведение, фиксация договорённостей</td><td>Протокол, презентация-статус, трекер</td></tr>
+          <tr><td>9. ТЗ и оценка</td><td class="r-o">Владеет</td><td>ТЗ на разработку, запрос доступов</td><td>ТЗ, контрольные точки</td></tr>
+          <tr><td>10А. Доступ к данным</td><td class="r-s">Согласует</td><td>Эскалация задержек доступов клиенту</td><td>—</td></tr>
+          <tr><td>10Б. Аудит</td><td class="r-o">Владеет</td><td>Интервью, согласование метрик с заказчиком</td><td>Презентация аудита</td></tr>
+          <tr><td>10В. Разработка</td><td class="r-o">Владеет</td><td>Соответствие целям и ожиданиям клиента</td><td>Приёмка по продукту</td></tr>
+          <tr><td>11. Сдача работ</td><td class="r-o">Владеет</td><td>Соответствие ТЗ, визуалам, бренд-буку</td><td>Акт сдачи-приёмки</td></tr>
+          <tr><td>12. Закрытие</td><td class="r-i">Информируется</td><td>Подтверждение объёма выполненных работ</td><td>—</td></tr>
+          <tr><td>13. Упаковка кейса</td><td class="r-s">Согласует</td><td>Описание кейса для каталога и сайта</td><td>Описание кейса</td></tr>
+          <tr><td>0. Ежедневный статус</td><td class="r-o">Владеет</td><td>Сквозной контроль всех звеньев</td><td>Ежедневная справка руководству</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend">
+      <span class="r-o">■ Владеет результатом</span>
+      <span class="r-s">■ Согласует / участвует</span>
+      <span class="r-i">■ Информируется</span>
+    </div>
+  </div>
+
+  <!-- 4. Разрывы -->
+  <div class="section">
+    <h2><span class="num">04</span>Разрывы цепочки</h2>
+    <p class="section-sub">
+      Места, где стандарт не даёт однозначного ответа. Сведены при развёртывании текста этапов в цепочку —
+      расхождения между описанием этапа и матрицей RACI, а также звенья без владельца или артефакта.
+    </p>
+    <div class="gaps">
+
+      <div class="gap">
+        <div class="gap-h">Владелец в RACI не совпадает с текстом <span>4 этапа</span></div>
+        <p>
+          Этап <b>4 «Договор, NDA и счёт»</b>: в тексте ответственный — Администратор проекта, в матрице «О»
+          стоит у Руководителя разработки. То же расхождение по этапам <b>12</b> (закрытие) и <b>13</b>
+          (упаковка кейса). По этапу <b>9</b> «О» отдано ГД, хотя в тексте — РП и РР; по <b>10А</b> «О» у
+          Администратора, тогда как работу ведёт Руководитель по разработке.
+        </p>
+      </div>
+
+      <div class="gap">
+        <div class="gap-h">Двойное владение <span>этап 10В</span></div>
+        <p>
+          В строке <b>«10в. Разработка BI-дашбордов»</b> два «О» одновременно — у Руководителя проекта и у
+          Администратора проекта. При двух ответственных звено де-факто не имеет владельца.
+        </p>
+      </div>
+
+      <div class="gap warn">
+        <div class="gap-h">Тех лид вне матрицы <span>роль</span></div>
+        <p>
+          Тех лид участвует в звене <b>10А</b> (передаёт клиенту требования к серверу), но в глоссарии у него
+          не указан исполнитель, а в RACI роль отсутствует как колонка. Аналогично Дизайнер: работает в
+          звене <b>8</b> над визуалами презентации, зона ответственности не заполнена.
+        </p>
+      </div>
+
+      <div class="gap warn">
+        <div class="gap-h">Ежедневный цикл не закреплён <span>этап 0</span></div>
+        <p>
+          Этап 0 описан и имеет чек-лист, но не входит ни в матрицу RACI, ни в итоговый чек-лист проекта.
+          Сквозной контур управления не проверяется при закрытии — то есть его пропуск ничем не выявляется.
+        </p>
+      </div>
+
+      <div class="gap warn">
+        <div class="gap-h">Ретроспектива без звена <span>закрытие</span></div>
+        <p>
+          В итоговом чек-листе есть пункт «Ретроспектива проведена, выводы зафиксированы», но самой
+          ретроспективы нет среди 13 этапов: не назначен владелец, не описан артефакт и не определено,
+          куда возвращаются выводы. Петля улучшения стандарта разомкнута.
+        </p>
+      </div>
+
+      <div class="gap warn">
+        <div class="gap-h">Гарантийный период без границы <span>звено 10В → 12</span></div>
+        <p>
+          Пункт 10.21 вводит администрирование и техподдержку «в период гарантийного обслуживания», но
+          длительность периода, состав поддержки и точка её окончания не заданы. При этом этап 12 закрывает
+          проект юридически — обязательство остаётся после закрытия без описанного режима.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <span>NLB Analytics · развёртывание стандарта ведения проектов в цепочку создания ценности</span>
+    <span><a href="./">← Бриф Data-Driven проекта</a></span>
+  </footer>
+
+</div>
+
+</body>
+</html>
