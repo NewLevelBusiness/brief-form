@@ -49,6 +49,11 @@ def build_rows(day, rules):
             skipped.append((title, "событие на весь день"))
             continue
 
+        # в календаре отклонённые встречи показаны зачёркнутыми
+        if event.get("declined"):
+            skipped.append((title, "встреча отклонена"))
+            continue
+
         excluded = next(
             (word for word in rules["exclude"] if word.lower() in title.lower()), None
         )
