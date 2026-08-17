@@ -12,7 +12,9 @@
 """
 
 import json
+import os
 import sys
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -158,11 +160,55 @@ def write_xlsx(path, sheet_name, iso_date, rows):
     workbook.save(path)
 
 
-def main():
-    if len(sys.argv) != 2:
-        sys.exit("Использование: python3 timesheet/build_timesheet.py ГГГГ-ММ-ДД")
+def push(rules, iso_date, rows):
+    """Отправляет строки в Apps Script, привязанный к таблице."""
+    url = rules.get("webhook_url")
+    secret = os.environ.get("TIMESHEET_SECRET")
 
-    iso_date = sys.argv[1]
+    if not url:
+        sys.exit("Нет webhook_url в rules.json — сначала разверните timesheet/appscript/Code.gs")
+    if not secret:
+        sys.exit("Нет переменной окружения TIMESHEET_SECRET")
+
+    payload = {
+        "secret": secret,
+        "date": ru_date(iso_date),
+        "rows": [
+            {
+                "hours": row["hours"],
+                "project": row["project"],
+                "work_type": row["work_type"],
+                "comment": row["comment"],
+            }
+            for row in rows
+        ],
+    }
+
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        result = json.loads(response.read().decode("utf-8"))
+
+    if result.get("status") != "ok":
+        sys.exit(f"Таблица вернула ошибку: {result.get('message')}")
+
+    replaced = result.get("replaced", 0)
+    note = f", заменено прежних строк за эту дату: {replaced}" if replaced else ""
+    print(f"\nЗаписано в лист «{rules['sheet']}»: {result.get('added')} строк{note}")
+
+
+def main():
+    args = sys.argv[1:]
+    should_push = "--push" in args
+    args = [arg for arg in args if arg != "--push"]
+
+    if len(args) != 1:
+        sys.exit("Использование: python3 timesheet/build_timesheet.py ГГГГ-ММ-ДД [--push]")
+
+    iso_date = args[0]
     events_path = BASE / "events" / f"{iso_date}.json"
     if not events_path.exists():
         sys.exit(f"Нет файла событий: {events_path}")
@@ -195,6 +241,9 @@ def main():
             print(f"  ! {warning}")
 
     print(f"\nФайлы: {out_dir / (stem + '.xlsx')}\n       {out_dir / (stem + '.tsv')}")
+
+    if should_push:
+        push(rules, iso_date, rows)
 
 
 if __name__ == "__main__":
