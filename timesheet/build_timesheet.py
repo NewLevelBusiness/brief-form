@@ -67,6 +67,9 @@ def build_rows(day, rules):
             work_type = rules["default_work_type"]
             warnings.append(f"«{title}»: тип работ не распознан → {work_type}")
 
+        if event.get("check"):
+            warnings.append(f"«{title}»: {event['check']}")
+
         if event.get("uncertain"):
             warnings.append(
                 f"«{title}»: время снято со скриншота приблизительно "
@@ -78,8 +81,10 @@ def build_rows(day, rules):
                 "hours": hours,
                 "project": project,
                 "work_type": work_type,
-                # комментарий = исходное название события, чтобы строку можно было проверить
-                "comment": title,
+                # исходное название события — для проверки; в лист попадает,
+                # только если в правилах включён emit_comment
+                "comment": title if rules.get("emit_comment") else "",
+                "source": title,
             }
         )
 
@@ -95,9 +100,10 @@ def merge(rows):
         key = (row["project"], row["work_type"])
         if key in merged:
             merged[key]["hours"] = round(merged[key]["hours"] + row["hours"], 2)
-            comments = merged[key]["comment"].split("; ")
-            if row["comment"] not in comments:
-                merged[key]["comment"] += "; " + row["comment"]
+            for field in ("comment", "source"):
+                parts = merged[key][field].split("; ")
+                if row[field] and row[field] not in parts:
+                    merged[key][field] = "; ".join(filter(None, parts + [row[field]]))
         else:
             merged[key] = dict(row)
     return list(merged.values())
@@ -126,6 +132,15 @@ def write_tsv(path, iso_date, rows):
                 ]
             )
         )
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_paste_tsv(path, rows):
+    """Только колонки B:E — в листе даты за день уже проставлены заранее."""
+    lines = [
+        "\t".join([ru_number(row["hours"]), row["project"], row["work_type"], row["comment"]])
+        for row in rows
+    ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -223,12 +238,14 @@ def main():
     out_dir.mkdir(exist_ok=True)
     stem = f"{iso_date}_{rules['sheet']}"
     write_tsv(out_dir / f"{stem}.tsv", iso_date, rows)
+    write_paste_tsv(out_dir / f"{stem}_вставка_B-E.tsv", rows)
     write_xlsx(out_dir / f"{stem}.xlsx", rules["sheet"], iso_date, rows)
 
     total = round(sum(row["hours"] for row in rows), 2)
     print(f"{ru_date(iso_date)} — лист «{rules['sheet']}», строк: {len(rows)}, часов: {ru_number(total)}\n")
     for row in rows:
-        print(f"  {ru_number(row['hours']):>5}  {row['project']:<26} {row['work_type']}")
+        print(f"  {ru_number(row['hours']):>5}  {row['project']:<26} {row['work_type'].strip()}")
+        print(f"         ← {row['source']}")
 
     if skipped:
         print("\nНе попало в учёт:")
