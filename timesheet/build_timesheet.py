@@ -45,6 +45,10 @@ def build_rows(day, rules):
     for event in day["events"]:
         title = event["title"]
 
+        if event.get("all_day"):
+            skipped.append((title, "событие на весь день"))
+            continue
+
         excluded = next(
             (word for word in rules["exclude"] if word.lower() in title.lower()), None
         )
