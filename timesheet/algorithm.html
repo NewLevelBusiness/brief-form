@@ -1,0 +1,406 @@
+<title>Часы по календарю</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ground:     #eef1f5;
+    --surface:    #ffffff;
+    --surface-2:  #f5f7fa;
+    --ink:        #16202c;
+    --muted:      #5c6b7a;
+    --line:       rgba(22, 32, 44, 0.13);
+    --line-soft:  rgba(22, 32, 44, 0.07);
+    --accent:     #a9690a;
+    --accent-soft:rgba(169, 105, 10, 0.10);
+    --drop:       #8a565b;
+    --drop-soft:  rgba(138, 86, 91, 0.10);
+
+    --display: 'Unbounded', 'Trebuchet MS', sans-serif;
+    --body:    'Golos Text', 'Helvetica Neue', Arial, sans-serif;
+    --mono:    'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:     #0e141a;
+      --surface:    #161f28;
+      --surface-2:  #1b2630;
+      --ink:        #e4ebf2;
+      --muted:      #92a3b3;
+      --line:       rgba(228, 235, 242, 0.15);
+      --line-soft:  rgba(228, 235, 242, 0.08);
+      --accent:     #e2a747;
+      --accent-soft:rgba(226, 167, 71, 0.13);
+      --drop:       #cd949a;
+      --drop-soft:  rgba(205, 148, 154, 0.12);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:     #0e141a;
+    --surface:    #161f28;
+    --surface-2:  #1b2630;
+    --ink:        #e4ebf2;
+    --muted:      #92a3b3;
+    --line:       rgba(228, 235, 242, 0.15);
+    --line-soft:  rgba(228, 235, 242, 0.08);
+    --accent:     #e2a747;
+    --accent-soft:rgba(226, 167, 71, 0.13);
+    --drop:       #cd949a;
+    --drop-soft:  rgba(205, 148, 154, 0.12);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 56px 28px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+
+  .prose { max-width: 68ch; display: flex; flex-direction: column; gap: 16px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(30px, 4.4vw, 46px);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .lede { font-size: 19px; color: var(--muted); text-wrap: balance; }
+
+  h2 {
+    font-family: var(--display);
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  h3 { font-size: 16px; font-weight: 600; }
+
+  p { text-wrap: pretty; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    padding: 0.08em 0.34em;
+  }
+
+  /* ── Схема ───────────────────────────────────────────── */
+
+  figure {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 28px 24px 20px;
+    overflow-x: auto;
+  }
+
+  figure svg {
+    display: block;
+    min-width: 720px;
+    width: 100%;
+    height: auto;
+    color: var(--ink);
+  }
+
+  figcaption {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 68ch;
+  }
+
+  .n-box   { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.5; }
+  .n-rules { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .n-drop  { fill: var(--drop-soft); stroke: var(--drop); stroke-width: 1.5; }
+
+  .t-title { font-family: 'Golos Text', sans-serif; font-size: 14px; font-weight: 600; fill: var(--ink); }
+  .t-sub   { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: var(--muted); }
+  .t-edge  { font-family: 'Golos Text', sans-serif; font-size: 11.5px; fill: var(--muted); }
+  .t-step  { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; fill: var(--accent); }
+  .t-dropl { font-family: 'Golos Text', sans-serif; font-size: 11.5px; fill: var(--drop); }
+
+  .flow    { stroke: var(--ink); stroke-width: 1.6; fill: none; }
+  .flow-a  { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+  .flow-d  { stroke: var(--drop); stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+
+  /* ── Таблица ─────────────────────────────────────────── */
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 15px; }
+
+  th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+
+  thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--surface-2);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .tag-exact { color: var(--accent); }
+  .tag-ask   { color: var(--drop); }
+
+  /* ── Шаги ────────────────────────────────────────────── */
+
+  .steps { display: grid; gap: 18px; }
+
+  .step {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 24px;
+  }
+
+  .step-n {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1.5;
+  }
+
+  .step-body { display: flex; flex-direction: column; gap: 9px; }
+  .step-body p { font-size: 15px; }
+  .step-body .out { font-size: 14px; color: var(--muted); }
+
+  .callout {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 68ch;
+  }
+  .callout h2 { font-size: 18px; }
+
+  ul { display: flex; flex-direction: column; gap: 8px; padding-left: 20px; }
+  li::marker { color: var(--muted); }
+
+  @media (max-width: 620px) {
+    .page { padding: 40px 18px 64px; gap: 34px; }
+    .step { grid-template-columns: 1fr; gap: 10px; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="prose">
+    <div class="eyebrow">Учёт времени · лист «Оксана»</div>
+    <h1>Часы по календарю</h1>
+    <p class="lede">Скриншот рабочего дня превращается в строки таблицы за три шага. Модель занята только первым из них — и это главное, что делает результат проверяемым.</p>
+  </header>
+
+  <figure>
+    <svg viewBox="0 0 980 440" role="img" aria-label="Схема: скриншот дня распознаётся в файл событий, скрипт применяет к нему правила и выдаёт строки для листа. Правила подпитываются подтверждениями человека, часть событий отсеивается и в часы не идёт.">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+        <marker id="ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"/>
+        </marker>
+        <marker id="ah-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--drop)"/>
+        </marker>
+      </defs>
+
+      <!-- главный конвейер -->
+      <rect class="n-box" x="20"  y="62" width="190" height="66" rx="9"/>
+      <text class="t-title" x="115" y="90"  text-anchor="middle">Скриншот дня</text>
+      <text class="t-sub"   x="115" y="110" text-anchor="middle">вид дня, GMT+03</text>
+
+      <rect class="n-box" x="270" y="62" width="190" height="66" rx="9"/>
+      <text class="t-title" x="365" y="90"  text-anchor="middle">События дня</text>
+      <text class="t-sub"   x="365" y="110" text-anchor="middle">events/ДАТА.json</text>
+
+      <rect class="n-box" x="520" y="62" width="190" height="66" rx="9"/>
+      <text class="t-title" x="615" y="90"  text-anchor="middle">Расчёт</text>
+      <text class="t-sub"   x="615" y="110" text-anchor="middle">build_timesheet.py</text>
+
+      <rect class="n-box" x="770" y="62" width="190" height="66" rx="9"/>
+      <text class="t-title" x="865" y="90"  text-anchor="middle">Лист «Оксана»</text>
+      <text class="t-sub"   x="865" y="110" text-anchor="middle">дата · часы · проект</text>
+
+      <!-- номера шагов -->
+      <text class="t-step" x="240" y="44" text-anchor="middle">ШАГ 1</text>
+      <text class="t-step" x="490" y="44" text-anchor="middle">ШАГ 2</text>
+      <text class="t-step" x="740" y="44" text-anchor="middle">ШАГ 3</text>
+
+      <!-- стрелки конвейера -->
+      <line class="flow" x1="210" y1="95" x2="262" y2="95" marker-end="url(#ah)"/>
+      <line class="flow" x1="460" y1="95" x2="512" y2="95" marker-end="url(#ah)"/>
+      <line class="flow" x1="710" y1="95" x2="762" y2="95" marker-end="url(#ah)"/>
+
+      <text class="t-edge" x="236" y="142" text-anchor="middle">зрение</text>
+      <text class="t-edge" x="486" y="142" text-anchor="middle">правила</text>
+      <text class="t-edge" x="736" y="142" text-anchor="middle">вставка</text>
+
+      <!-- отсев -->
+      <path class="flow-d" d="M 665 128 L 665 168 L 865 168 L 865 196" marker-end="url(#ah-d)"/>
+      <text class="t-dropl" x="676" y="185">в часы не идёт</text>
+
+      <rect class="n-drop" x="770" y="198" width="190" height="96" rx="9"/>
+      <text class="t-title" x="865" y="224" text-anchor="middle">Отсев</text>
+      <text class="t-sub"   x="865" y="245" text-anchor="middle">зачёркнутые</text>
+      <text class="t-sub"   x="865" y="263" text-anchor="middle">весь день, ДР</text>
+      <text class="t-sub"   x="865" y="281" text-anchor="middle">обед, напоминания</text>
+
+      <!-- правила питают расчёт -->
+      <rect class="n-rules" x="520" y="198" width="190" height="62" rx="9"/>
+      <text class="t-title" x="615" y="224" text-anchor="middle">Правила</text>
+      <text class="t-sub"   x="615" y="244" text-anchor="middle">rules.json</text>
+
+      <line class="flow-a" x1="615" y1="196" x2="615" y2="132" marker-end="url(#ah-a)"/>
+      <text class="t-edge" x="604" y="170" text-anchor="end">проект, тип работ,</text>
+      <text class="t-edge" x="604" y="186" text-anchor="end">округление до 0,1</text>
+
+      <!-- петля подтверждений -->
+      <rect class="n-box" x="520" y="340" width="190" height="66" rx="9"/>
+      <text class="t-title" x="615" y="368" text-anchor="middle">Подтверждение</text>
+      <text class="t-sub"   x="615" y="388" text-anchor="middle">человек отвечает</text>
+
+      <line class="flow-a" x1="615" y1="338" x2="615" y2="266" marker-end="url(#ah-a)"/>
+      <text class="t-edge" x="604" y="300" text-anchor="end">ответ становится</text>
+      <text class="t-edge" x="604" y="316" text-anchor="end">правилом навсегда</text>
+
+      <!-- расчёт спрашивает -->
+      <path class="flow" d="M 520 95 L 480 95 L 480 373 L 512 373" marker-end="url(#ah)"/>
+      <text class="t-edge" x="468" y="356" text-anchor="end">«проверьте вручную»</text>
+    </svg>
+    <figcaption>Модель работает только на шаге 1 — выписывает время и название события. Проект, тип работ и округление считает скрипт по правилам, поэтому один и тот же скриншот всегда даёт одни и те же часы. Спорные места скрипт выносит человеку, а ответ возвращается в правила — и больше не спрашивается.</figcaption>
+  </figure>
+
+  <section class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <div class="step-body">
+        <h3>Снять события</h3>
+        <p>Со скриншота выписываются только время и название — дословно, вместе с опечатками вроде «развтие» и «пазработке». Исправленное название не совпадёт ни с одним правилом, поэтому правила настроены на то, как события называются на самом деле.</p>
+        <p class="out">Результат: <code>events/2026-08-18.json</code></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">2</div>
+      <div class="step-body">
+        <h3>Посчитать</h3>
+        <p>Скрипт отбрасывает нерабочее, ставит проект и тип работ, округляет часы до 0,1 и складывает одинаковые пары «проект + тип работ» за день. Здесь нет модели — результат воспроизводим и его можно перепроверить построчно.</p>
+        <p class="out">Результат: <code>out/2026-08-18_Оксана.tsv</code> и <code>.xlsx</code></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">3</div>
+      <div class="step-body">
+        <h3>Записать в лист</h3>
+        <p>Перед тем как назвать строку для вставки, читается текущее состояние листа: докуда он заполнен и совпадают ли уже вставленные дни с текущим расчётом. Без этой проверки часы задваиваются, а если правила с тех пор менялись — в листе тихо остаются старые цифры.</p>
+        <p class="out">Результат: строки для вставки или дозапись через Apps Script</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="prose">
+    <h2>Как читается время</h2>
+    <p>Google показывает диапазон не у каждой карточки, и от того, что именно видно, зависит, знаем мы длительность или предполагаем.</p>
+  </section>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Что видно в карточке</th>
+          <th>Что берём</th>
+          <th>Уверенность</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Диапазон целиком — <code>3:45–7:45PM</code></td>
+          <td>Ровно то, что написано</td>
+          <td><span class="tag tag-exact">точно</span></td>
+        </tr>
+        <tr>
+          <td>Только начало, следующее событие идёт вплотную</td>
+          <td>Конец = начало следующего. Так восстанавливаются и 15-минутные события</td>
+          <td><span class="tag tag-exact">выводится</span></td>
+        </tr>
+        <tr>
+          <td>Только начало, дальше пусто</td>
+          <td>30 минут, пометка <code>uncertain</code> и вопрос человеку</td>
+          <td><span class="tag tag-ask">спрашиваем</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <section class="prose">
+    <p>Недельный вид врёт по краям: длинные названия обрезаются, а параллельные события наезжают друг на друга и часть из них не видна вовсе. Если что-то выглядит спорным, вид дня разрешает почти все сомнения — на нём уже нашлись и лишний «Ломбард_синк», и встреча, которая оказалась на 45 минут, а не на час.</p>
+  </section>
+
+  <section class="prose">
+    <h2>Порядок правил решает</h2>
+    <p><code>rules.json</code> проверяется сверху вниз, побеждает первое совпадение. Два места, где очевидный порядок даёт неверный ответ:</p>
+    <ul>
+      <li><strong>«Ломбард» проверяется раньше «НЛБ».</strong> В событии «Белый ломбард_НЛБ_регулярная встреча» проект — Ломбард, а НЛБ значит лишь, что встреча внутренняя.</li>
+      <li><strong>«сдача» проверяется раньше «разработки».</strong> «Очно сдача пультов Олегу» — это подготовка отчётов для заказчика, хотя в названии есть слово «пульт».</li>
+    </ul>
+  </section>
+
+  <div class="callout">
+    <h2>Почему вопросов становится меньше</h2>
+    <p>Каждое подтверждение записывается туда, откуда возьмётся в следующий раз: разовое решение по конкретному событию — в примечание к событию, общее — в правила. Одновременно снимается пометка <code>uncertain</code>, чтобы разбор перестал поднимать закрытый вопрос.</p>
+    <p>Это и есть смысл петли на схеме. За неделю работы так закрылись «СМ» и «ИИ», «пульты», зачёркнутые встречи, две опечатки в названиях и лид по нефтедобыче. Если один и тот же вопрос задан второй раз — значит, правило не записали.</p>
+  </div>
+
+</div>
