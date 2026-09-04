@@ -23,10 +23,18 @@ COLUMNS = ["дата", "к-во часов", "проект", "тип работ"
 
 
 def match_rule(title, rules, key):
-    """Первое правило, чей шаблон встречается в названии события."""
+    """Первое подошедшее правило.
+
+    `match` срабатывает по любой из подстрок, `all` — только если в названии
+    есть все перечисленные сразу. Второе нужно там, где решает сочетание слов:
+    «Росинка» вместе с «разработкой» — это отдельный проект, а порознь нет.
+    """
     low = title.lower()
     for rule in rules:
-        for pattern in rule["match"]:
+        required = rule.get("all")
+        if required and all(p.lower() in low for p in required):
+            return rule[key], " + ".join(required)
+        for pattern in rule.get("match", []):
             if pattern.lower() in low:
                 return rule[key], pattern
     return None, None
