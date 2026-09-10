@@ -1,0 +1,757 @@
+<title>Data-driven blueprint 2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Golos+Text:wght@400;500;600;700&display=swap">
+
+<style>
+  :root {
+    --paper:        #F7F8FC;
+    --surface:      #FFFFFF;
+    --surface-2:    #EEF0F9;
+    --panel:        #0A1140;
+    --panel-2:      #17246E;
+    --panel-ink:    #E8EBFF;
+    --panel-muted:  #A8B0E0;
+    --ink:          #0E1230;
+    --muted:        #5A6084;
+    --rule:         #E0E3F0;
+    --rule-strong:  #C7CCE4;
+    --blue:         #1C2CAE;
+    --blue-soft:    #E9EBFA;
+    --agent:        #B45309;
+    --agent-ink:    #8A3F07;
+    --agent-soft:   #FBEEDC;
+    --agent-rule:   #E8C79B;
+    --shadow:       0 1px 2px rgba(14,18,48,.06), 0 8px 24px -16px rgba(14,18,48,.28);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:        #080A18;
+      --surface:      #11142A;
+      --surface-2:    #191D38;
+      --panel:        #050827;
+      --panel-2:      #101A55;
+      --panel-ink:    #E4E8FF;
+      --panel-muted:  #98A1D4;
+      --ink:          #ECEEFA;
+      --muted:        #9AA0C2;
+      --rule:         rgba(255,255,255,.10);
+      --rule-strong:  rgba(255,255,255,.20);
+      --blue:         #8B9BFF;
+      --blue-soft:    rgba(139,155,255,.13);
+      --agent:        #F0A855;
+      --agent-ink:    #F6C48C;
+      --agent-soft:   rgba(240,168,85,.13);
+      --agent-rule:   rgba(240,168,85,.34);
+      --shadow:       0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:        #080A18;
+    --surface:      #11142A;
+    --surface-2:    #191D38;
+    --panel:        #050827;
+    --panel-2:      #101A55;
+    --panel-ink:    #E4E8FF;
+    --panel-muted:  #98A1D4;
+    --ink:          #ECEEFA;
+    --muted:        #9AA0C2;
+    --rule:         rgba(255,255,255,.10);
+    --rule-strong:  rgba(255,255,255,.20);
+    --blue:         #8B9BFF;
+    --blue-soft:    rgba(139,155,255,.13);
+    --agent:        #F0A855;
+    --agent-ink:    #F6C48C;
+    --agent-soft:   rgba(240,168,85,.13);
+    --agent-rule:   rgba(240,168,85,.34);
+    --shadow:       0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Golos Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 72px;
+  }
+
+  h1, h2, h3, .display {
+    font-family: 'Unbounded', 'Golos Text', sans-serif;
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ---------- header ---------- */
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 32px;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 20px;
+  }
+  .head h1 {
+    font-size: clamp(30px, 5vw, 46px);
+    font-weight: 700;
+    color: var(--blue);
+    line-height: 1.02;
+    margin-top: 8px;
+  }
+  .head h1 em {
+    font-style: normal;
+    color: var(--agent);
+  }
+  .head .lede {
+    max-width: 46ch;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+  .mark {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    line-height: .95;
+    letter-spacing: -0.03em;
+    border: 2px solid var(--ink);
+    padding: 7px 9px 6px;
+    color: var(--ink);
+    white-space: pre-line;
+  }
+
+  /* ---------- thesis ---------- */
+  .thesis {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .thesis > div {
+    background: var(--surface);
+    padding: 18px 20px 20px;
+  }
+  .thesis dt {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .thesis dd { font-size: 14px; }
+  .thesis strong { color: var(--agent-ink); font-weight: 600; }
+
+  /* ---------- section titles ---------- */
+  .sect {
+    margin-top: 56px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--rule-strong);
+    padding-bottom: 10px;
+  }
+  .sect h2 { font-size: 20px; font-weight: 600; }
+  .sect p { color: var(--muted); font-size: 13.5px; }
+
+  /* ---------- legend ---------- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-top: 16px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .tag.new  { background: var(--agent); color: #FFF8EE; }
+  :root[data-theme="dark"] .tag.new { color: #24160A; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .tag.new { color: #24160A; }
+  }
+  .tag.chg  { background: var(--agent-soft); color: var(--agent-ink); border: 1px solid var(--agent-rule); }
+  .tag.keep { background: var(--blue-soft); color: var(--blue); }
+
+  /* ---------- stack ---------- */
+  .stack-frame {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .vbar {
+    background: linear-gradient(180deg, var(--agent-soft), var(--surface));
+    border: 1px solid var(--agent-rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: 16px;
+  }
+  .vbar span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: 'Unbounded', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--agent-ink);
+    text-align: center;
+  }
+
+  .stack { display: flex; flex-direction: column; }
+
+  .layer {
+    display: grid;
+    grid-template-columns: 176px minmax(0, 1fr) 330px;
+    gap: 16px;
+    padding-block: 16px;
+    border-top: 1px dashed var(--rule-strong);
+    align-items: start;
+  }
+  .layer:first-child { border-top: 0; padding-top: 4px; }
+
+  .lname { display: flex; gap: 10px; align-items: flex-start; }
+  .num {
+    flex: none;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+    display: grid; place-items: center;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  :root[data-theme="dark"] .num { color: #070A20; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .num { color: #070A20; }
+  }
+  .layer.is-new .num { background: var(--agent); }
+  .lname h3 {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--blue);
+    line-height: 1.25;
+  }
+  .layer.is-new .lname h3 { color: var(--agent-ink); }
+  .lname .tag { margin-top: 6px; }
+
+  .boxes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .box {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    box-shadow: var(--shadow);
+    padding: 10px 13px;
+    font-size: 13px;
+    line-height: 1.35;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .box b { display: block; font-weight: 600; }
+  .box small { color: var(--muted); font-size: 11.5px; }
+  .box.agent {
+    border-color: var(--agent-rule);
+    background: var(--agent-soft);
+  }
+  .box.agent b { color: var(--agent-ink); }
+  .box.wide { flex-basis: 100%; }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .flow .step {
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    padding: 7px 11px;
+    font-size: 12.5px;
+  }
+  .flow .arr { color: var(--rule-strong); font-size: 14px; }
+
+  .probs {
+    background: linear-gradient(135deg, var(--panel) 0%, var(--panel-2) 180%);
+    color: var(--panel-ink);
+    padding: 13px 16px 14px;
+    min-width: 0;
+  }
+  .probs .h {
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--panel-muted);
+    margin-bottom: 7px;
+  }
+  .probs ol { margin: 0; padding-left: 17px; }
+  .probs li {
+    font-size: 12.5px;
+    line-height: 1.4;
+    margin-bottom: 5px;
+  }
+  .probs li:last-child { margin-bottom: 0; }
+  .probs li::marker { color: var(--panel-muted); }
+
+  /* ---------- loop ---------- */
+  .loop {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--agent-rule);
+    padding: 16px 18px;
+  }
+  .loop .cap {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--agent-ink);
+    margin-right: 4px;
+  }
+  .loop .node {
+    border: 1px solid var(--rule-strong);
+    padding: 6px 11px;
+    font-size: 12.5px;
+    background: var(--paper);
+  }
+  .loop .to { color: var(--agent); font-weight: 700; }
+  .loop .back {
+    font-size: 12px;
+    color: var(--muted);
+    flex-basis: 100%;
+  }
+
+  /* ---------- table ---------- */
+  .tscroll { overflow-x: auto; margin-top: 18px; }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 13.5px;
+  }
+  th {
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  td:first-child { color: var(--muted); width: 30%; }
+  td.b { color: var(--ink); font-weight: 500; }
+  tr:last-child td { border-bottom: 0; }
+
+  /* ---------- deltas ---------- */
+  .deltas {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .delta {
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--blue);
+    background: var(--surface);
+    padding: 16px 18px 18px;
+  }
+  .delta.gone { border-top-color: var(--rule-strong); }
+  .delta.add  { border-top-color: var(--agent); }
+  .delta h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+  .delta ul { margin: 0; padding-left: 18px; }
+  .delta li { font-size: 13.5px; margin-bottom: 7px; }
+  .delta li:last-child { margin-bottom: 0; }
+
+  .foot {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 900px) {
+    .layer { grid-template-columns: 1fr; gap: 10px; }
+    .layer .probs { margin-top: 2px; }
+    .stack-frame { grid-template-columns: 1fr; }
+    .vbar { padding: 12px 14px; }
+    .vbar span { writing-mode: horizontal-tb; transform: none; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="head">
+    <div>
+      <div class="eyebrow">Обновление блупринта · слой исполнения</div>
+      <h1>Data-driven blueprint <em>2.0</em></h1>
+      <p class="lede">Что меняется в семи слоях, когда операции выполняют цифровые сотрудники, а операционное управление ведут цифровые управленцы.</p>
+    </div>
+    <div class="mark">NEW
+LEVEL</div>
+  </header>
+
+  <dl class="thesis">
+    <div>
+      <dt>Главный сдвиг</dt>
+      <dd>Стек перестаёт заканчиваться на глазах человека. Данные должны быть <strong>пригодны к действию машиной</strong>, а не только читаемы на дашборде.</dd>
+    </div>
+    <div>
+      <dt>Форма схемы</dt>
+      <dd>Лестница снизу вверх превращается в <strong>замкнутый контур</strong>: решение возвращается вниз действием и тут же порождает новые данные.</dd>
+    </div>
+    <div>
+      <dt>Набор слоёв</dt>
+      <dd>Было 7. Стало <strong>8 горизонтальных + 1 сквозной</strong>: добавлен слой цифровых сотрудников и вертикаль доверия и контроля.</dd>
+    </div>
+  </dl>
+
+  <div class="sect">
+    <h2>Обновлённая схема слоёв</h2>
+    <p>Снизу вверх, как в исходном блупринте. Справа — типовые проблемы уже с учётом агентов.</p>
+  </div>
+
+  <div class="legend">
+    <span><span class="tag new">новый слой</span> появился из-за агентов</span>
+    <span><span class="tag chg">переосмыслен</span> содержание слоя меняется</span>
+    <span><span class="tag keep">каркас</span> остаётся как было</span>
+  </div>
+
+  <div class="stack-frame">
+    <div class="vbar" aria-hidden="false"><span>Доверие и контроль · сквозной слой</span></div>
+
+    <div class="stack">
+
+      <!-- 8 -->
+      <section class="layer">
+        <div class="lname">
+          <div class="num">8</div>
+          <div>
+            <h3>Принятие решений</h3>
+            <span class="tag chg">переосмыслен</span>
+          </div>
+        </div>
+        <div class="boxes">
+          <div class="box"><b>Матрица решений</b><small>кто решает: человек, агент, человек по представлению агента</small></div>
+          <div class="box"><b>Зоны ответственности</b><small>у каждого агента — владелец-человек</small></div>
+          <div class="box"><b>Система мотивации</b><small>KPI гибридных команд «человек + агент»</small></div>
+        </div>
+        <div class="probs">
+          <div class="h">Типовые проблемы</div>
+          <ol>
+            <li>Решения не распределены между человеком и агентом</li>
+            <li>За ошибку агента формально никто не отвечает</li>
+            <li>Мотивация наказывает за передачу работы агенту</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 7 -->
+      <section class="layer">
+        <div class="lname">
+          <div class="num">7</div>
+          <div>
+            <h3>Интерфейсы взаимодействия</h3>
+            <span class="tag chg">переосмыслен</span>
+          </div>
+        </div>
+        <div class="boxes">
+          <div class="box"><b>Дашборды и управленческие отчёты</b><small>для человека</small></div>
+          <div class="box agent"><b>Очередь подтверждений</b><small>приёмка работы агента, исключения</small></div>
+          <div class="box"><b>Аналитические справки, self-service</b></div>
+          <div class="box agent"><b>Агентские интерфейсы</b><small>API и инструменты, контекст, протоколы — «дашборд для машины»</small></div>
+        </div>
+        <div class="probs">
+          <div class="h">Типовые проблемы</div>
+          <ol>
+            <li>Интерфейсы сделаны только для человека — агенту нечем пользоваться</li>
+            <li>Нет очереди подтверждений: работу агента невозможно принять</li>
+            <li>Не видно, что агент сделал и на каком основании</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 6 -->
+      <section class="layer is-new">
+        <div class="lname">
+          <div class="num">6</div>
+          <div>
+            <h3>Цифровые сотрудники и оркестрация</h3>
+            <span class="tag new">новый слой</span>
+          </div>
+        </div>
+        <div class="boxes">
+          <div class="box agent"><b>Цифровые исполнители</b><small>операции: ввод, сверка, подготовка документов, обработка обращений</small></div>
+          <div class="box agent"><b>Цифровые управленцы</b><small>контроль отклонений, постановка задач, эскалация</small></div>
+          <div class="box agent"><b>Оркестратор и хендоффы</b><small>передача между агентами и человеком</small></div>
+          <div class="box wide"><b>Реестр агентов: роли, инструкции, версии, владельцы, SLA</b><small>агент — это штатная единица, а не фича внутри системы</small></div>
+        </div>
+        <div class="probs">
+          <div class="h">Типовые проблемы</div>
+          <ol>
+            <li>Нет реестра агентов и их владельцев — никто не знает, кто что делает</li>
+            <li>Агенты заводятся точечно, без оркестрации и правил передачи</li>
+            <li>Нет SLA и метрик качества работы агента</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 5 -->
+      <section class="layer">
+        <div class="lname">
+          <div class="num">5</div>
+          <div>
+            <h3>Методология, правила и полномочия</h3>
+            <span class="tag chg">переосмыслен</span>
+          </div>
+        </div>
+        <div class="boxes">
+          <div class="box"><b>Система показателей</b><small>дерево метрик</small></div>
+          <div class="box"><b>Учётная политика</b><small>справочники расчёта</small></div>
+          <div class="box agent"><b>Правила решений</b><small>машиночитаемые: триггер, порог, действие</small></div>
+          <div class="box agent"><b>Политика полномочий</b><small>лимиты по сумме, объёму, риску</small></div>
+          <div class="box agent"><b>Критерии эскалации</b><small>когда агент обязан вернуть решение человеку</small></div>
+        </div>
+        <div class="probs">
+          <div class="h">Типовые проблемы</div>
+          <ol>
+            <li>Правила решений живут в голове руководителя — агенту нечего передать</li>
+            <li>Не заданы лимиты полномочий, поэтому агента боятся выпускать в бой</li>
+            <li>Нет критериев эскалации: агент либо всё спрашивает, либо ничего</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 4 -->
+      <section class="layer">
+        <div class="lname">
+          <div class="num">4</div>
+          <div>
+            <h3>Модели, витрины и семантика</h3>
+            <span class="tag chg">переосмыслен</span>
+          </div>
+        </div>
+        <div class="boxes">
+          <div class="box agent"><b>Семантический слой</b><small>контракт доступа к данным для агента, а не только для BI</small></div>
+          <div class="box"><b>Аналитические модели</b><small>LLM, ML</small></div>
+          <div class="box"><b>Модели BI</b></div>
+          <div class="box agent"><b>Реестр инструментов</b><small>функции и действия, доступные агенту</small></div>
+        </div>
+        <div class="probs">
+          <div class="h">Типовые проблемы</div>
+          <ol>
+            <li>Агент ходит в сырые таблицы мимо семантики — ответы расходятся с отчётностью</li>
+            <li>Нет реестра инструментов: агент умеет отвечать, но не умеет делать</li>
+            <li>Модель данных не масштабируется под частоту обращений агентов</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 3 -->
+      <section class="layer">
+        <div class="lname">
+          <div class="num">3</div>
+          <div>
+            <h3>Архитектура данных и контекста</h3>
+            <span class="tag chg">переосмыслен</span>
+          </div>
+        </div>
+        <div class="boxes">
+          <div class="box"><b>DWH</b><small>интеграция, хранение, управление данными</small></div>
+          <div class="box agent"><b>Поток событий</b><small>real-time вместо суточной загрузки</small></div>
+          <div class="box agent"><b>База знаний</b><small>регламенты, договоры, переписка — неструктурированный контекст</small></div>
+          <div class="box agent"><b>Память агентов</b><small>история решений и действий</small></div>
+          <div class="box agent wide"><b>Контракты данных и блокирующий контроль качества</b><small>человек заметит битую цифру, агент — нет: он по ней сработает</small></div>
+        </div>
+        <div class="probs">
+          <div class="h">Типовые проблемы</div>
+          <ol>
+            <li>Данные суточной свежести — агент действует по вчерашней картине</li>
+            <li>Неструктурированные знания не собраны: агенту не на что опереться</li>
+            <li>Качество данных не блокирует процесс — ошибка сразу превращается в действие</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 2 -->
+      <section class="layer">
+        <div class="lname">
+          <div class="num">2</div>
+          <div>
+            <h3>Системы и действия</h3>
+            <span class="tag chg">переосмыслен</span>
+          </div>
+        </div>
+        <div class="boxes">
+          <div class="box"><b>CRM · ERP · WMS · SRM · корп. портал · внешние источники</b><small>SQL и API на чтение</small></div>
+          <div class="box agent"><b>API на действие</b><small>система — не только источник, но и «руки» агента</small></div>
+          <div class="box agent"><b>Идемпотентность и откат</b><small>повтор не должен создавать второй заказ</small></div>
+          <div class="box agent"><b>Тестовый контур</b><small>песочница для проверки агента до боевого запуска</small></div>
+        </div>
+        <div class="probs">
+          <div class="h">Типовые проблемы</div>
+          <ol>
+            <li>Интеграции только на чтение — агент может смотреть, но не делать</li>
+            <li>Действия не идемпотентны и не откатываются</li>
+            <li>Нет песочницы: агента негде проверить, кроме продуктива</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 1 -->
+      <section class="layer">
+        <div class="lname">
+          <div class="num">1</div>
+          <div>
+            <h3>Процессы и операции</h3>
+            <span class="tag chg">переосмыслен</span>
+          </div>
+        </div>
+        <div class="boxes">
+          <div class="flow">
+            <span class="step">Разработка продукта</span><span class="arr">→</span>
+            <span class="step">Производство</span><span class="arr">→</span>
+            <span class="step">Логистика</span><span class="arr">→</span>
+            <span class="step">Продажи</span>
+          </div>
+          <div class="box agent wide"><b>Разбор до операции, у каждой — тип исполнителя: человек / агент / гибрид</b><small>регламент становится исполняемой инструкцией, а не текстом в папке</small></div>
+        </div>
+        <div class="probs">
+          <div class="h">Типовые проблемы</div>
+          <ol>
+            <li>Процессы не декомпозированы до операций — агента некуда посадить</li>
+            <li>Нет критериев передачи операции агенту и возврата человеку</li>
+            <li>Нет стандарта ввода данных, поэтому автоматизировать нечего</li>
+          </ol>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="loop">
+    <span class="cap">Замкнутый контур</span>
+    <span class="node">Данные</span><span class="to">→</span>
+    <span class="node">Решение (человек или цифровой управленец)</span><span class="to">→</span>
+    <span class="node">Действие в системе</span><span class="to">→</span>
+    <span class="node">Событие</span><span class="to">→</span>
+    <span class="node">Данные</span>
+    <span class="back">Раньше цикл замыкался вне контура — устной командой человеку — и был ненаблюдаем. Теперь каждый шаг логируется и измеряется.</span>
+  </div>
+
+  <div class="sect">
+    <h2>Сквозной слой: доверие и контроль</h2>
+    <p>Раньше это был один блок «Управление данными» внутри слоя 3. Теперь агент касается всех слоёв, поэтому контроль становится вертикалью.</p>
+  </div>
+
+  <div class="deltas">
+    <div class="delta add">
+      <h3>Что входит в вертикаль</h3>
+      <ul>
+        <li>Журнал действий: что агент сделал, на каких данных, по какому правилу</li>
+        <li>Наблюдаемость и регулярная оценка качества работы агента</li>
+        <li>Ограничители: доступы, персональные данные, запрещённые действия</li>
+        <li>Экономика: стоимость операции агента против стоимости операции человека</li>
+      </ul>
+    </div>
+    <div class="delta add">
+      <h3>Типовые проблемы вертикали</h3>
+      <ul>
+        <li>Действия агентов не логируются — разбор инцидента невозможен</li>
+        <li>Качество не измеряется регулярно, доверие держится на впечатлении</li>
+        <li>Права агента шире, чем у сотрудника, чью работу он выполняет</li>
+        <li>Стоимость работы агента никто не считает</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sect">
+    <h2>Было → стало</h2>
+    <p>Соответствие семи исходных слоёв обновлённой схеме.</p>
+  </div>
+
+  <div class="tscroll">
+    <table>
+      <thead>
+        <tr><th>Исходный слой</th><th>Стало</th><th>Суть изменения</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1 · Процессы</td><td class="b">1 · Процессы и операции</td><td>Появляется атрибут исполнителя у каждой операции; регламент становится исполняемым</td></tr>
+        <tr><td>2 · Информационные системы</td><td class="b">2 · Системы и действия</td><td>Система из источника данных превращается ещё и в инструмент действия</td></tr>
+        <tr><td>3 · Архитектура данных</td><td class="b">3 · Архитектура данных и контекста</td><td>К DWH добавляются события, база знаний, память агентов и контракты данных</td></tr>
+        <tr><td>4 · Модели и витрины данных</td><td class="b">4 · Модели, витрины и семантика</td><td>Семантика — контракт для агента; добавляется реестр инструментов</td></tr>
+        <tr><td>5 · Методология и правила</td><td class="b">5 · Методология, правила и полномочия</td><td>К «как считаем» добавляется «как действуем»: правила решений, лимиты, эскалация</td></tr>
+        <tr><td>—</td><td class="b">6 · Цифровые сотрудники и оркестрация</td><td>Новый слой: агенты как штатные единицы с ролями, владельцами и SLA</td></tr>
+        <tr><td>6 · Аналитические интерфейсы</td><td class="b">7 · Интерфейсы взаимодействия</td><td>К интерфейсам для человека добавляются интерфейсы для агента и приёмка его работы</td></tr>
+        <tr><td>7 · Принятие решений</td><td class="b">8 · Принятие решений</td><td>Матрица распределяет решения между людьми и агентами; ответственность именная</td></tr>
+        <tr><td>Управление данными <small>(блок в слое 3)</small></td><td class="b">Доверие и контроль <small>(вертикаль)</small></td><td>Из блока внутри архитектуры становится сквозным слоем через все восемь</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sect">
+    <h2>Что уходит, что появляется</h2>
+    <p>Изменения, которые стоит проговорить отдельно при защите схемы.</p>
+  </div>
+
+  <div class="deltas">
+    <div class="delta gone">
+      <h3>Перестаёт быть проблемой</h3>
+      <ul>
+        <li>«Реальные процессы расходятся с регламентами» — на агентских операциях регламент и есть исполнение</li>
+        <li>«Данные не встроены в управленческий цикл» — агент не может действовать мимо данных</li>
+        <li>Дашборд перестаёт быть главным продуктом проекта: часть решений принимается без экрана</li>
+      </ul>
+    </div>
+    <div class="delta add">
+      <h3>Появляется взамен</h3>
+      <ul>
+        <li>Риск быстрой ошибки: агент масштабирует неверное правило за минуты</li>
+        <li>Требование к свежести и качеству данных вырастает с «удобно» до «критично»</li>
+        <li>Новая управленческая работа: постановка задач агенту и приёмка его результата</li>
+        <li>Вопрос доверия: пока действия непрозрачны, полномочия агенту не отдадут</li>
+      </ul>
+    </div>
+    <div class="delta">
+      <h3>С чего начинать</h3>
+      <ul>
+        <li>Выбрать 1–2 операции слоя 1 с высокой частотой и понятным правилом</li>
+        <li>Формализовать правило решения и лимиты полномочий на слое 5</li>
+        <li>Открыть API на действие и песочницу на слое 2</li>
+        <li>Запустить агента с обязательным подтверждением человеком, снимать метрики, снижать долю подтверждений</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="foot">Схема продолжает исходный Data-driven blueprint: нумерация и порядок слоёв сохранены, чтобы её можно было показывать рядом с первой версией.</p>
+
+</div>
