@@ -22,15 +22,22 @@ BASE = Path(__file__).resolve().parent
 COLUMNS = ["дата", "к-во часов", "проект", "тип работ", "комментарий"]
 
 
-def match_rule(title, rules, key):
+def match_rule(title, rules, key, date=None):
     """Первое подошедшее правило.
 
     `match` срабатывает по любой из подстрок, `all` — только если в названии
     есть все перечисленные сразу. Второе нужно там, где решает сочетание слов:
     «Росинка» вместе с «разработкой» — это отдельный проект, а порознь нет.
+
+    `since` и `until` (ГГГГ-ММ-ДД, включительно) ограничивают правило датами:
+    так проект можно закрыть с определённого дня, не переписывая прошлые дни.
     """
     low = title.lower()
     for rule in rules:
+        if date and rule.get("since") and date < rule["since"]:
+            continue
+        if date and rule.get("until") and date > rule["until"]:
+            continue
         required = rule.get("all")
         if required and all(p.lower() in low for p in required):
             return rule[key], " + ".join(required)
@@ -74,12 +81,12 @@ def build_rows(day, rules):
             skipped.append((title, "нулевая длительность"))
             continue
 
-        project, _ = match_rule(title, rules["projects"], "project")
+        project, _ = match_rule(title, rules["projects"], "project", day["date"])
         if project is None:
             project = rules["default_project"]
             warnings.append(f"«{title}»: проект не распознан → {project}")
 
-        work_type, _ = match_rule(title, rules["work_types"], "work_type")
+        work_type, _ = match_rule(title, rules["work_types"], "work_type", day["date"])
         if work_type is None:
             work_type = rules["default_work_type"]
             warnings.append(f"«{title}»: тип работ не распознан → {work_type}")
