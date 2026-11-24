@@ -22,12 +22,21 @@ BASE = Path(__file__).resolve().parent
 COLUMNS = ["дата", "к-во часов", "проект", "тип работ", "комментарий"]
 
 
+def found(pattern, low):
+    if pattern.startswith("^"):
+        return low.startswith(pattern[1:].lower())
+    return pattern.lower() in low
+
+
 def match_rule(title, rules, key, date=None):
     """Первое подошедшее правило.
 
     `match` срабатывает по любой из подстрок, `all` — только если в названии
     есть все перечисленные сразу. Второе нужно там, где решает сочетание слов:
     «Росинка» вместе с «разработкой» — это отдельный проект, а порознь нет.
+
+    Шаблон, начинающийся с «^», срабатывает только в начале названия: так
+    «^БЛ_» ловит «БЛ_трекинг», но не «НЛБ_трекинг», внутри которого сидит «бл_».
 
     `since` и `until` (ГГГГ-ММ-ДД, включительно) ограничивают правило датами:
     так проект можно закрыть с определённого дня, не переписывая прошлые дни.
@@ -39,10 +48,10 @@ def match_rule(title, rules, key, date=None):
         if date and rule.get("until") and date > rule["until"]:
             continue
         required = rule.get("all")
-        if required and all(p.lower() in low for p in required):
+        if required and all(found(p, low) for p in required):
             return rule[key], " + ".join(required)
         for pattern in rule.get("match", []):
-            if pattern.lower() in low:
+            if found(pattern, low):
                 return rule[key], pattern
     return None, None
 
